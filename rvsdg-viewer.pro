@@ -1,7 +1,8 @@
-QT += widgets
+QT += widgets xml
+QMAKE_CXXFLAGS += -g
 
-HEADERS       = src/mainwindow.h src/treeitem.h src/treemodel.h
-SOURCES       = src/main.cpp src/mainwindow.cpp src/treeitem.cpp src/treemodel.cpp
+HEADERS       = src/mainwindow.h src/treeitem.h src/treemodel.h src/diagramscene.h
+SOURCES       = src/rvsdg-viewer.cpp src/mainwindow.cpp src/treeitem.cpp src/treemodel.cpp src/diagramscene.cpp
 RESOURCES     = application.qrc
 
 # install

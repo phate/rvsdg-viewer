@@ -1,32 +1,21 @@
 #include <QtWidgets>
+#include <QDomDocument>
 
 #include "mainwindow.h"
 #include "treemodel.h"
 
+///////////////////////////////////////////////////////////////////////////////
+
 MainWindow::MainWindow() {
-  QWidget *window = new QWidget;
-  QPushButton *button1 = new QPushButton("One");
-
-  QFile file("../default.txt");
-  file.open(QIODevice::ReadOnly);
-  TreeModel *model = new TreeModel(file.readAll());
-  file.close();
-
-  QTreeView *view = new QTreeView();
-  view->setModel(model);
-
-  QHBoxLayout *layout = new QHBoxLayout;
-  layout->addWidget(view);
-  layout->addWidget(button1);
-
-  window->setLayout(layout);
-  setCentralWidget(window);
-
-  createActions();
-  createMenus();
-  createToolBars();
-  createStatusBar();
+  init();
 }
+
+MainWindow::MainWindow(const QString &fileName) {
+  init();
+  loadFile(fileName);
+}
+
+///////////////////////////////////////////////////////////////////////////////
 
 void MainWindow::closeEvent(QCloseEvent *event) {
   event->accept();
@@ -34,6 +23,7 @@ void MainWindow::closeEvent(QCloseEvent *event) {
 
 void MainWindow::open() {
   QString fileName = QFileDialog::getOpenFileName(this);
+  if(!fileName.isNull()) loadFile(fileName);
 }
 
 void MainWindow::about() {
@@ -41,7 +31,25 @@ void MainWindow::about() {
                      tr("NTNU"));
 }
 
-void MainWindow::createActions() {
+///////////////////////////////////////////////////////////////////////////////
+
+void MainWindow::init() {
+  // central widget
+  treeView = new QTreeView();
+
+  scene = new DiagramScene(this);
+  scene->setSceneRect(QRectF(0, 0, 500, 500));
+  graphicsView = new QGraphicsView(scene);
+
+  QSplitter *splitter = new QSplitter;
+  splitter->addWidget(treeView);
+  splitter->addWidget(graphicsView);
+
+  setCentralWidget(splitter);
+
+  resize(800,800);
+
+  // actions
   openAct = new QAction(QIcon(":/images/open.png"), tr("&Open..."), this);
   openAct->setShortcuts(QKeySequence::Open);
   openAct->setStatusTip(tr("Open an existing file"));
@@ -59,9 +67,8 @@ void MainWindow::createActions() {
   aboutQtAct = new QAction(tr("About &Qt"), this);
   aboutQtAct->setStatusTip(tr("Show the Qt library's About box"));
   connect(aboutQtAct, SIGNAL(triggered()), qApp, SLOT(aboutQt()));
-}
 
-void MainWindow::createMenus() {
+  // menus
   fileMenu = menuBar()->addMenu(tr("&File"));
   fileMenu->addAction(openAct);
   fileMenu->addSeparator();
@@ -72,14 +79,33 @@ void MainWindow::createMenus() {
   helpMenu = menuBar()->addMenu(tr("&Help"));
   helpMenu->addAction(aboutAct);
   helpMenu->addAction(aboutQtAct);
-}
 
-void MainWindow::createToolBars() {
+  // toolbar
   fileToolBar = addToolBar(tr("File"));
   fileToolBar->addAction(openAct);
-}
 
-void MainWindow::createStatusBar() {
+  // statusbar
   statusBar()->showMessage(tr("Ready"));
 }
 
+void MainWindow::loadFile(const QString &fileName) {
+  QDomDocument doc;
+  QFile file(fileName);
+  if(!file.open(QIODevice::ReadOnly)) {
+    QMessageBox msgBox;
+    msgBox.setText("File not found");
+    msgBox.exec();
+    return;
+  }
+  if(!doc.setContent(&file)) {
+    QMessageBox msgBox;
+    msgBox.setText("Invalid file");
+    msgBox.exec();
+    file.close();
+    return;
+  }
+  file.close();
+
+  TreeModel *model = new TreeModel(doc);
+  treeView->setModel(model);
+}

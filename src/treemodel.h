@@ -44,16 +44,16 @@
 #include <QAbstractItemModel>
 #include <QModelIndex>
 #include <QVariant>
+#include <QDomDocument>
 
 class TreeItem;
 
-//! [0]
 class TreeModel : public QAbstractItemModel
 {
     Q_OBJECT
 
 public:
-    explicit TreeModel(const QString &data, QObject *parent = 0);
+    explicit TreeModel(const QDomDocument &doc, QObject *parent = 0);
     ~TreeModel();
 
     QVariant data(const QModelIndex &index, int role) const Q_DECL_OVERRIDE;
@@ -67,10 +67,9 @@ public:
     int columnCount(const QModelIndex &parent = QModelIndex()) const Q_DECL_OVERRIDE;
 
 private:
-    void setupModelData(const QStringList &lines, TreeItem *parent);
+    void setupModelData(const QDomElement &element, TreeItem *parent);
 
     TreeItem *rootItem;
 };
-//! [0]
 
 #endif // TREEMODEL_H
