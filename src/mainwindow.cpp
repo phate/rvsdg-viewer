@@ -2,7 +2,6 @@
 #include <QDomDocument>
 
 #include "mainwindow.h"
-#include "treemodel.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -33,9 +32,15 @@ void MainWindow::about() {
 
 ///////////////////////////////////////////////////////////////////////////////
 
+void MainWindow::regionClicked(const QModelIndex &index) {
+  printf("hei: %s\n", (rvsdgModel->data(index, Qt::DisplayRole)).toString().toUtf8().constData());
+}
+
 void MainWindow::init() {
   // central widget
   treeView = new QTreeView();
+
+  connect(treeView, SIGNAL(clicked(QModelIndex)), this, SLOT(regionClicked(QModelIndex)));
 
   scene = new DiagramScene(this);
   scene->setSceneRect(QRectF(0, 0, 500, 500));
@@ -106,6 +111,8 @@ void MainWindow::loadFile(const QString &fileName) {
   }
   file.close();
 
-  TreeModel *model = new TreeModel(doc);
-  treeView->setModel(model);
+  rvsdgModel = new Model();
+  rvsdgModel->constructFromXml(doc);
+
+  treeView->setModel(rvsdgModel);
 }

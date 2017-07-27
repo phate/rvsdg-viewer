@@ -4,6 +4,7 @@
 #include <QTreeView>
 #include <QMainWindow>
 #include "diagramscene.h"
+#include "rvsdg.h"
 
 class MainWindow : public QMainWindow {
   Q_OBJECT
@@ -18,6 +19,7 @@ protected:
 private slots:
   void open();
   void about();
+  void regionClicked(const QModelIndex &index);
 
 private:
   void init();
@@ -26,6 +28,7 @@ private:
   QTreeView *treeView;
   DiagramScene *scene;
   QGraphicsView *graphicsView;
+  Model *rvsdgModel;
 
   QMenu *fileMenu;
   QMenu *helpMenu;
