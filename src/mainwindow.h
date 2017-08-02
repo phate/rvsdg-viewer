@@ -1,6 +1,7 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include <QtWidgets>
 #include <QTreeView>
 #include <QMainWindow>
 #include "diagramscene.h"
@@ -12,6 +13,7 @@ class MainWindow : public QMainWindow {
 public:
   MainWindow();
   MainWindow(const QString &fileName);
+  ~MainWindow();
 
 protected:
   void closeEvent(QCloseEvent *event) Q_DECL_OVERRIDE;
@@ -29,7 +31,7 @@ private:
   DiagramScene *scene;
   QGraphicsView *graphicsView;
   Model *rvsdgModel;
-
+  QSplitter *splitter;
   QMenu *fileMenu;
   QMenu *helpMenu;
   QToolBar *fileToolBar;

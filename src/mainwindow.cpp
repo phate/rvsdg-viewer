@@ -1,4 +1,3 @@
-#include <QtWidgets>
 #include <QDomDocument>
 
 #include "mainwindow.h"
@@ -26,33 +25,37 @@ void MainWindow::open() {
 }
 
 void MainWindow::about() {
-  QMessageBox::about(this, tr("About RVSDG Viewer"),
-                     tr("NTNU"));
+  QMessageBox::about(this, tr("About RVSDG Viewer"), tr("NTNU"));
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 
 void MainWindow::regionClicked(const QModelIndex &index) {
-  printf("hei: %s\n", (rvsdgModel->data(index, Qt::DisplayRole)).toString().toUtf8().constData());
+  Element *el = static_cast<Element*>(index.internalPointer());
+  if(el->isRegion()) {
+    scene->drawRegion(static_cast<Region*>(el));
+  }
 }
 
 void MainWindow::init() {
+  rvsdgModel = NULL;
+
   // central widget
   treeView = new QTreeView();
 
   connect(treeView, SIGNAL(clicked(QModelIndex)), this, SLOT(regionClicked(QModelIndex)));
 
   scene = new DiagramScene(this);
-  scene->setSceneRect(QRectF(0, 0, 500, 500));
+  scene->setSceneRect(QRectF(0, 0, 1024, 1024));
   graphicsView = new QGraphicsView(scene);
 
-  QSplitter *splitter = new QSplitter;
+  splitter = new QSplitter;
   splitter->addWidget(treeView);
   splitter->addWidget(graphicsView);
 
   setCentralWidget(splitter);
 
-  resize(800,800);
+  showMaximized();
 
   // actions
   openAct = new QAction(QIcon(":/images/open.png"), tr("&Open..."), this);
@@ -93,6 +96,10 @@ void MainWindow::init() {
   statusBar()->showMessage(tr("Ready"));
 }
 
+MainWindow::~MainWindow() {
+  if(rvsdgModel) delete rvsdgModel;
+}
+
 void MainWindow::loadFile(const QString &fileName) {
   QDomDocument doc;
   QFile file(fileName);
@@ -104,15 +111,23 @@ void MainWindow::loadFile(const QString &fileName) {
   }
   if(!doc.setContent(&file)) {
     QMessageBox msgBox;
-    msgBox.setText("Invalid file");
+    msgBox.setText("Invalid XML file");
     msgBox.exec();
     file.close();
     return;
   }
   file.close();
 
-  rvsdgModel = new Model();
-  rvsdgModel->constructFromXml(doc);
+  if(rvsdgModel) delete rvsdgModel;
+  try {
+    rvsdgModel = new Model(doc);
+  } catch (std::exception &e) {
+    QMessageBox msgBox;
+    msgBox.setText("Invalid RVSDG file");
+    msgBox.exec();
+    rvsdgModel = NULL;
+    return;
+  }
 
   treeView->setModel(rvsdgModel);
 }

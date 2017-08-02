@@ -4,89 +4,117 @@
 #include "rvsdg.h"
 #include <iostream>
 
-void Model::constructFromXml(const QDomDocument &doc) {
-  top = new Element("root");
-  top->constructFromXml(doc.documentElement(), 0);
-  top->insertElements(elements);
+#include "diagramscene.h"
 
-  QDomNodeList edgeList = doc.elementsByTagName(TAG_EDGE);
+///////////////////////////////////////////////////////////////////////////////
 
-  for(int i = 0; i < edgeList.length(); i++) {
-    QDomNode n = edgeList.at(i);
-    QDomElement e = n.toElement();
-    if(!e.isNull()) {
-      QString source = e.attribute(ATTR_SOURCE);
-      QString target = e.attribute(ATTR_TARGET);
-      Element *sourceEl = elements.at(source);
-      Element *targetEl = elements.at(target);
-      // assert(sourceEl != NULL);
-      // assert(targetEl != NULL);
-      sourceEl->appendEdge(targetEl);
-    }
-  }
-}
-
-void Element::insertElements(std::map<QString,Element*> &elements) {
-  elements[id] = this;
-  for(auto it : children) {
-    it->insertElements(elements);
-  }
-}
-
-void Node::insertElements(std::map<QString,Element*> &elements) {
-  Element::insertElements(elements);
-  for(auto it : inputs) {
-    it->insertElements(elements);
-  }
-  for(auto it : outputs) {
-    it->insertElements(elements);
-  }
-}
-
-void Region::insertElements(std::map<QString,Element*> &elements) {
-  Element::insertElements(elements);
-  for(auto it : arguments) {
-    it->insertElements(elements);
-  }
-}
-
-int Element::constructFromXml(const QDomElement &element, int row) {
+int Element::constructFromXml(const QDomElement &element, int treeviewRow, std::map<QString,Element*> &elements) {
   Element *child = this;
 
+  QString childId = element.attribute(ATTR_ID, "");
+
+  // FIXME: dangerous casting, will segfault with invalid XML
   if(element.tagName() == TAG_NODE) {
-    child = new Node(element.attribute(ATTR_ID, ""), row++, this);
+    child = new Node(childId, treeviewRow++, this);
     appendChild(child);
 
   } else if(element.tagName() == TAG_REGION) {
-    child = new Region(element.attribute(ATTR_ID, ""), row++, this);
+    child = new Region(childId, treeviewRow++, this);
     appendChild(child);
 
   } else if(element.tagName() == TAG_INPUT) {
-    child = new Input(element.attribute(ATTR_ID, ""), this);
+    child = new Input(childId, this);
     ((Node*)this)->appendInput(child);
 
   } else if(element.tagName() == TAG_OUTPUT) {
-    child = new Output(element.attribute(ATTR_ID, ""), this);
+    child = new Output(childId, this);
     ((Node*)this)->appendOutput(child);
 
   } else if(element.tagName() == TAG_ARGUMENT) {
-    child = new Argument(element.attribute(ATTR_ID, ""), this);
+    child = new Argument(childId, this);
     ((Region*)this)->appendArgument(child);
+
+  } else if(element.tagName() == TAG_RESULT) {
+    child = new Result(childId, this);
+    ((Region*)this)->appendResult(child);
   }
+
+  if(child != this) elements[childId] = child;
 
   QDomNode n = element.firstChild();
   int i = 0;
   while(!n.isNull()) {
     QDomElement e = n.toElement();
-    if(!e.isNull()) i = child->constructFromXml(e, i);
+    if(!e.isNull()) i = child->constructFromXml(e, i, elements);
     n = n.nextSibling();
   }
 
-  return row;
+  return treeviewRow;
 }
 
-QModelIndex Model::index(int row, int column, const QModelIndex &parent) const {
-  if (!hasIndex(row, column, parent))
+///////////////////////////////////////////////////////////////////////////////
+
+unsigned Node::getWidth() {
+  unsigned width = inputs.size() * (INPUTOUTPUT_CLEARANCE + INPUTOUTPUT_SIZE);
+  unsigned outputWidth = outputs.size() * (INPUTOUTPUT_CLEARANCE + INPUTOUTPUT_SIZE);
+
+  if(outputWidth > width) width = outputWidth;
+
+  // FIXME: find a way to avoid creating a dummy textitem just for the size
+  QGraphicsTextItem *text = new QGraphicsTextItem(id);
+  unsigned textwidth = text->boundingRect().width() + TEXT_CLEARANCE*2;
+  if(textwidth > width) width = textwidth;
+  delete text;
+
+  return width;
+}
+
+QGraphicsItem *Node::getItem(unsigned x, unsigned y) {
+  GfxNode *node = new GfxNode(id, getWidth());
+
+  int xx = INPUTOUTPUT_CLEARANCE;
+
+  for(auto input : inputs) {
+    Q_UNUSED(input);
+    GfxInput *inputItem = new GfxInput(node);
+    inputItem->setPos(QPointF(xx, 0));
+    xx += INPUTOUTPUT_CLEARANCE + INPUTOUTPUT_SIZE;
+  }
+
+  xx = INPUTOUTPUT_CLEARANCE;
+
+  for(auto output : outputs) {
+    Q_UNUSED(output);
+    GfxOutput *outputItem = new GfxOutput(node);
+    outputItem->setPos(QPointF(xx, 100));
+    xx += INPUTOUTPUT_CLEARANCE + INPUTOUTPUT_SIZE;
+  }
+
+  node->setPos(QPointF(x, y));
+
+  return node;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+QGraphicsItem *Argument::getItem(unsigned x, unsigned y) {
+  GfxArgument *argument = new GfxArgument;
+  argument->setPos(QPointF(x, y));
+  return argument;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+QGraphicsItem *Result::getItem(unsigned x, unsigned y) {
+  GfxResult *result = new GfxResult;
+  result->setPos(QPointF(x, y));
+  return result;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+QModelIndex Model::index(int treeviewRow, int column, const QModelIndex &parent) const {
+  if (!hasIndex(treeviewRow, column, parent))
     return QModelIndex();
 
   Element *parentEl;
@@ -96,9 +124,9 @@ QModelIndex Model::index(int row, int column, const QModelIndex &parent) const {
   else
     parentEl = static_cast<Element*>(parent.internalPointer());
 
-  Element *childEl = parentEl->getChild(row);
+  Element *childEl = parentEl->children[treeviewRow];
 
-  if (childEl) return createIndex(row, column, childEl);
+  if (childEl) return createIndex(treeviewRow, column, childEl);
   else return QModelIndex();
 }
 
@@ -107,24 +135,25 @@ QModelIndex Model::parent(const QModelIndex &index) const {
     return QModelIndex();
 
   Element *childEl = static_cast<Element*>(index.internalPointer());
-  Element *parentEl = childEl->getParent();
+  Element *parentEl = childEl->parent;
 
   if (parentEl == top) {
     return QModelIndex();
   }
 
-  return createIndex(parentEl->getRow(), 0, parentEl);
+  return createIndex(parentEl->treeviewRow, 0, parentEl);
 }
 
 int Model::rowCount(const QModelIndex &parent) const {
   if (parent.isValid()) {
-    return static_cast<Element*>(parent.internalPointer())->numChildren();
+    return static_cast<Element*>(parent.internalPointer())->children.size();
   } else {
-    return top->numChildren();
+    return top->children.size();
   }
 }
 
 int Model::columnCount(const QModelIndex &parent) const {
+  Q_UNUSED(parent);
   return 2;
 }
 
@@ -141,7 +170,7 @@ QVariant Model::data(const QModelIndex &index, int role) const {
     case 0:
       return el->getType();
     case 1:
-      return el->getId();
+      return el->id;
   }
 
   return QVariant();
@@ -162,4 +191,28 @@ Qt::ItemFlags Model::flags(const QModelIndex &index) const {
     return 0;
 
   return QAbstractItemModel::flags(index);
+}
+
+Model::Model(const QDomDocument &doc, QObject *parent) : QAbstractItemModel(parent) {
+  top = new Element("root");
+  top->constructFromXml(doc.documentElement(), 0, elements);
+
+  QDomNodeList edgeList = doc.elementsByTagName(TAG_EDGE);
+
+  for(int i = 0; i < edgeList.length(); i++) {
+    QDomNode n = edgeList.at(i);
+    QDomElement e = n.toElement();
+    if(!e.isNull()) {
+      QString source = e.attribute(ATTR_SOURCE);
+      QString target = e.attribute(ATTR_TARGET);
+      Element *sourceEl = elements.at(source);
+      Element *targetEl = elements.at(target);
+
+      if((sourceEl == NULL) || (targetEl == NULL)) {
+        delete top;
+        throw std::exception();
+      }
+      sourceEl->appendEdge(targetEl);
+    }
+  }
 }
