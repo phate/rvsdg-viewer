@@ -11,6 +11,7 @@ public:
   explicit DiagramScene(QObject *parent = 0);
   ~DiagramScene();
   void drawRegion(Region *region);
+  void mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent);
 };
 
 #endif

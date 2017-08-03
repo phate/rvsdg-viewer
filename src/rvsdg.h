@@ -154,11 +154,11 @@ public:
   // constructing the graph
 
   void appendInput(Element *e) {
-    e->setPos(inputs.size() * 20 + 10, 0);
+    e->setPos(inputs.size() * (INPUTOUTPUT_SIZE + INPUTOUTPUT_CLEARANCE) + INPUTOUTPUT_CLEARANCE, 0);
     inputs.insert(inputs.end(), e);
   }
   void appendOutput(Element *e) {
-    e->setPos(outputs.size() * 20 + 10, 100);
+    e->setPos(outputs.size() * (INPUTOUTPUT_SIZE + INPUTOUTPUT_CLEARANCE) + INPUTOUTPUT_CLEARANCE + INPUTOUTPUT_CLEARANCE/2, NODE_HEIGHT);
     outputs.insert(outputs.end(), e);
   }
 

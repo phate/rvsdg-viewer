@@ -97,7 +97,7 @@ unsigned Node::addItem(DiagramScene *scene) {
     xx += INPUTOUTPUT_CLEARANCE + INPUTOUTPUT_SIZE;
   }
 
-  xx = INPUTOUTPUT_CLEARANCE;
+  xx = INPUTOUTPUT_CLEARANCE + INPUTOUTPUT_CLEARANCE/2;
 
   for(auto output : outputs) {
     Q_UNUSED(output);
@@ -120,8 +120,8 @@ unsigned Node::addItem(DiagramScene *scene) {
 unsigned Argument::addItem(DiagramScene *scene) {
   QPolygonF polygon;
   polygon << QPointF(0,0)
-          << QPointF(-INPUTOUTPUT_SIZE/2,INPUTOUTPUT_SIZE)
-          << QPointF(INPUTOUTPUT_SIZE/2,INPUTOUTPUT_SIZE);
+          << QPointF(-INPUTOUTPUT_SIZE/2,-INPUTOUTPUT_SIZE)
+          << QPointF(INPUTOUTPUT_SIZE/2,-INPUTOUTPUT_SIZE);
 
   QGraphicsPolygonItem *poly = new QGraphicsPolygonItem(polygon);
   poly->setPos(QPointF(x, y));
@@ -136,8 +136,8 @@ unsigned Argument::addItem(DiagramScene *scene) {
 unsigned Result::addItem(DiagramScene *scene) {
   QPolygonF polygon;
   polygon << QPointF(0,0)
-          << QPointF(-INPUTOUTPUT_SIZE/2,-INPUTOUTPUT_SIZE)
-          << QPointF(INPUTOUTPUT_SIZE/2,-INPUTOUTPUT_SIZE);
+          << QPointF(-INPUTOUTPUT_SIZE/2,INPUTOUTPUT_SIZE)
+          << QPointF(INPUTOUTPUT_SIZE/2,INPUTOUTPUT_SIZE);
 
   QGraphicsPolygonItem *poly = new QGraphicsPolygonItem(polygon);
   poly->setPos(QPointF(x, y));

@@ -5,11 +5,8 @@
 #include <QGraphicsSceneMouseEvent>
 #include <QGraphicsEllipseItem>
 
-#define SPACING_X 50
-#define SPACING_Y 50
-
-#define LEFT_COLUMN 50
-#define TOP_COLUMN 50
+#define SPACING_X 100
+#define SPACING_Y 100
 
 #define LINE_CLEARANCE 10
 
@@ -116,7 +113,7 @@ void DiagramScene::drawRegion(Region *region) {
   if(region->arguments.size()) {
     currentLayer++;
     layers.push_back(new std::vector<Element*>);
-    for(auto node = region->results.begin(); node != region->results.end(); node++) {
+    for(auto node = region->arguments.begin(); node != region->arguments.end(); node++) {
       (*node)->setRowCol(currentLayer, layers[currentLayer]->size());
       layers[currentLayer]->push_back(*node);
     }
@@ -144,24 +141,30 @@ void DiagramScene::drawRegion(Region *region) {
     }
   }
 
-  // find edge routing corridors
-  std::vector<unsigned> currentRoutingXs(columnWidths.size()); // where multi-row edges are routed
-  currentRoutingXs[0] = LEFT_COLUMN - LINE_CLEARANCE;
+  // find vertical edge routing corridors
+  std::vector<unsigned> currentRoutingXs(columnWidths.size());
+  currentRoutingXs[0] = SPACING_X - LINE_CLEARANCE;
   int i = 1;
   for(auto width : columnWidths) {
     currentRoutingXs[i] = currentRoutingXs[i-1] + SPACING_X + width;
     i++;
   }
 
+  // find horizontal edge routing corridors
+  std::vector<unsigned> currentRoutingYs(columnWidths.size());
+
   // display vertices
-  unsigned x = LEFT_COLUMN;
-  unsigned y = TOP_COLUMN;
+  unsigned x = SPACING_X;
+  unsigned y = SPACING_Y;
   unsigned maxHeight = 0;
 
   unsigned sceneWidth = 0;
 
+  int l = layers.size() - 1;
+
   for(auto layer = layers.rbegin(); layer != layers.rend(); layer++) {
     int i = 0;
+    currentRoutingYs[l--] = y - LINE_CLEARANCE;
     for(auto vertex : *(*layer)) {
 
       // set vertex position
@@ -178,7 +181,7 @@ void DiagramScene::drawRegion(Region *region) {
       i++;
     }
 
-    x = LEFT_COLUMN;
+    x = SPACING_X;
     y += SPACING_Y + maxHeight;
   }
 
@@ -192,14 +195,27 @@ void DiagramScene::drawRegion(Region *region) {
         if((source->getRow() - target->getRow()) > 1) {
           // edge is spanning more than one row, add polyline
           unsigned currentRoutingX = currentRoutingXs[target->getColumn()];
-          addLine(source->getX(), source->getY(), currentRoutingX, source->getY() + (SPACING_Y/2));
-          addLine(currentRoutingX, source->getY() + (SPACING_Y/2), currentRoutingX, target->getY() - (SPACING_Y/2));
-          addLine(currentRoutingX, target->getY() - (SPACING_Y/2), target->getX(), target->getY());
+          unsigned currentRoutingYSource = currentRoutingYs[source->getRow()-1];
+          unsigned currentRoutingYTarget = currentRoutingYs[target->getRow()];
+
+          addLine(source->getX(), source->getY(), source->getX(), currentRoutingYSource);
+          addLine(source->getX(), currentRoutingYSource, currentRoutingX, currentRoutingYSource);
+          addLine(currentRoutingX, currentRoutingYSource, currentRoutingX, currentRoutingYTarget);
+          addLine(currentRoutingX, currentRoutingYTarget, target->getX(), currentRoutingYTarget);
+          addLine(target->getX(), currentRoutingYTarget, target->getX(), target->getY());
 
           currentRoutingXs[target->getColumn()] -= LINE_CLEARANCE;
+          currentRoutingYs[source->getRow()-1] -= LINE_CLEARANCE;
+          currentRoutingYs[target->getRow()] -= LINE_CLEARANCE;
 
         } else {
-          addLine(source->getX(), source->getY(), target->getX(), target->getY());
+          unsigned currentRoutingYSource = currentRoutingYs[source->getRow()-1];
+
+          addLine(source->getX(), source->getY(), source->getX(), currentRoutingYSource);
+          addLine(source->getX(), currentRoutingYSource, target->getX(), currentRoutingYSource);
+          addLine(target->getX(), currentRoutingYSource, target->getX(), target->getY());
+
+          currentRoutingYs[source->getRow()-1] -= LINE_CLEARANCE;
         }
       }
     }
@@ -212,5 +228,12 @@ void DiagramScene::drawRegion(Region *region) {
   
   for(auto layer : layers) {
     delete layer;
+  }
+}
+
+void DiagramScene::mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent) {
+  if (mouseEvent->button() == Qt::LeftButton) {
+    QGraphicsItem *item = itemAt(mouseEvent->scenePos(), QTransform());
+    if(item) printf("%d %d\n", (int)item->scenePos().x(), (int)item->scenePos().y());
   }
 }
