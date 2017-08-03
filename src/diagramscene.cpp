@@ -144,10 +144,21 @@ void DiagramScene::drawRegion(Region *region) {
     }
   }
 
+  // find edge routing corridors
+  std::vector<unsigned> currentRoutingXs(columnWidths.size()); // where multi-row edges are routed
+  currentRoutingXs[0] = LEFT_COLUMN - LINE_CLEARANCE;
+  int i = 1;
+  for(auto width : columnWidths) {
+    currentRoutingXs[i] = currentRoutingXs[i-1] + SPACING_X + width;
+    i++;
+  }
+
   // display vertices
   unsigned x = LEFT_COLUMN;
   unsigned y = TOP_COLUMN;
   unsigned maxHeight = 0;
+
+  unsigned sceneWidth = 0;
 
   for(auto layer = layers.rbegin(); layer != layers.rend(); layer++) {
     int i = 0;
@@ -159,11 +170,10 @@ void DiagramScene::drawRegion(Region *region) {
       vertex->setPos(posX, y);
 
       // add graphics item for this vertex
-      QGraphicsItem *item = vertex->getItem(posX, y);
-      addItem(item);
+      unsigned height = vertex->addItem(this);
 
       x += SPACING_X + columnWidths[i];
-      unsigned height = item->boundingRect().height();
+      if(x > sceneWidth) sceneWidth = x;
       if(height > maxHeight) maxHeight = height;
       i++;
     }
@@ -173,8 +183,6 @@ void DiagramScene::drawRegion(Region *region) {
   }
 
   // display edges
-  unsigned currentRoutingX = LEFT_COLUMN - LINE_CLEARANCE; // where multi-row lines are routed
-
   for(auto layer : layers) {
     for(auto vertex : *layer) {
       for(unsigned i = 0; i < vertex->getNumEdges(); i++) {
@@ -183,11 +191,12 @@ void DiagramScene::drawRegion(Region *region) {
 
         if((source->getRow() - target->getRow()) > 1) {
           // edge is spanning more than one row, add polyline
+          unsigned currentRoutingX = currentRoutingXs[target->getColumn()];
           addLine(source->getX(), source->getY(), currentRoutingX, source->getY() + (SPACING_Y/2));
           addLine(currentRoutingX, source->getY() + (SPACING_Y/2), currentRoutingX, target->getY() - (SPACING_Y/2));
           addLine(currentRoutingX, target->getY() - (SPACING_Y/2), target->getX(), target->getY());
 
-          currentRoutingX -= LINE_CLEARANCE;
+          currentRoutingXs[target->getColumn()] -= LINE_CLEARANCE;
 
         } else {
           addLine(source->getX(), source->getY(), target->getX(), target->getY());
@@ -195,6 +204,8 @@ void DiagramScene::drawRegion(Region *region) {
       }
     }
   }
+
+  setSceneRect(QRectF(0, 0, sceneWidth + SPACING_X, y + SPACING_Y));
 
   ///////////////////////////////////////////////////////////////////////////////
   // cleanup

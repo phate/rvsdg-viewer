@@ -46,9 +46,10 @@ void MainWindow::init() {
   connect(treeView, SIGNAL(clicked(QModelIndex)), this, SLOT(regionClicked(QModelIndex)));
 
   scene = new DiagramScene(this);
-  scene->setSceneRect(QRectF(0, 0, 1024, 1024));
-  graphicsView = new QGraphicsView(scene);
+  scene->setSceneRect(QRectF(0, 0, 1024, 512));
 
+  graphicsView = new QGraphicsView(scene);
+  
   splitter = new QSplitter;
   splitter->addWidget(treeView);
   splitter->addWidget(graphicsView);
@@ -130,4 +131,5 @@ void MainWindow::loadFile(const QString &fileName) {
   }
 
   treeView->setModel(rvsdgModel);
+  treeView->setColumnWidth(0,250);
 }

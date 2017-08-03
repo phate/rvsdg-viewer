@@ -69,14 +69,30 @@ unsigned Node::getWidth() {
   return width;
 }
 
-QGraphicsItem *Node::getItem(unsigned x, unsigned y) {
-  GfxNode *node = new GfxNode(id, getWidth());
+unsigned Node::addItem(DiagramScene *scene) {
+  int width = getWidth();
+
+  QPolygonF polygon;
+  polygon << QPointF(0, 0)
+          << QPointF(width, 0)
+          << QPointF(width, NODE_HEIGHT)
+          << QPointF(0, NODE_HEIGHT);
+
+  QGraphicsPolygonItem *poly = new QGraphicsPolygonItem(polygon);
+  poly->setPos(QPointF(x, y));
+
+  QGraphicsTextItem *text = new QGraphicsTextItem(id, poly);
+  text->setPos(QPointF(TEXT_CLEARANCE, NODE_HEIGHT/2-text->boundingRect().height()/2));
 
   int xx = INPUTOUTPUT_CLEARANCE;
 
   for(auto input : inputs) {
     Q_UNUSED(input);
-    GfxInput *inputItem = new GfxInput(node);
+    QPolygonF p;
+    p << QPointF(0,0)
+      << QPointF(-INPUTOUTPUT_SIZE/2,INPUTOUTPUT_SIZE)
+      << QPointF(INPUTOUTPUT_SIZE/2,INPUTOUTPUT_SIZE);
+    QGraphicsPolygonItem *inputItem = new QGraphicsPolygonItem(p, poly);
     inputItem->setPos(QPointF(xx, 0));
     xx += INPUTOUTPUT_CLEARANCE + INPUTOUTPUT_SIZE;
   }
@@ -85,30 +101,50 @@ QGraphicsItem *Node::getItem(unsigned x, unsigned y) {
 
   for(auto output : outputs) {
     Q_UNUSED(output);
-    GfxOutput *outputItem = new GfxOutput(node);
+    QPolygonF p;
+    p << QPointF(0,0)
+      << QPointF(-INPUTOUTPUT_SIZE/2,-INPUTOUTPUT_SIZE)
+      << QPointF(INPUTOUTPUT_SIZE/2,-INPUTOUTPUT_SIZE);
+    QGraphicsPolygonItem *outputItem = new QGraphicsPolygonItem(p, poly);
     outputItem->setPos(QPointF(xx, 100));
     xx += INPUTOUTPUT_CLEARANCE + INPUTOUTPUT_SIZE;
   }
 
-  node->setPos(QPointF(x, y));
+  scene->addItem(poly);
 
-  return node;
+  return NODE_HEIGHT;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 
-QGraphicsItem *Argument::getItem(unsigned x, unsigned y) {
-  GfxArgument *argument = new GfxArgument;
-  argument->setPos(QPointF(x, y));
-  return argument;
+unsigned Argument::addItem(DiagramScene *scene) {
+  QPolygonF polygon;
+  polygon << QPointF(0,0)
+          << QPointF(-INPUTOUTPUT_SIZE/2,INPUTOUTPUT_SIZE)
+          << QPointF(INPUTOUTPUT_SIZE/2,INPUTOUTPUT_SIZE);
+
+  QGraphicsPolygonItem *poly = new QGraphicsPolygonItem(polygon);
+  poly->setPos(QPointF(x, y));
+
+  scene->addItem(poly);
+
+  return INPUTOUTPUT_SIZE;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 
-QGraphicsItem *Result::getItem(unsigned x, unsigned y) {
-  GfxResult *result = new GfxResult;
-  result->setPos(QPointF(x, y));
-  return result;
+unsigned Result::addItem(DiagramScene *scene) {
+  QPolygonF polygon;
+  polygon << QPointF(0,0)
+          << QPointF(-INPUTOUTPUT_SIZE/2,-INPUTOUTPUT_SIZE)
+          << QPointF(INPUTOUTPUT_SIZE/2,-INPUTOUTPUT_SIZE);
+
+  QGraphicsPolygonItem *poly = new QGraphicsPolygonItem(polygon);
+  poly->setPos(QPointF(x, y));
+
+  scene->addItem(poly);
+
+  return INPUTOUTPUT_SIZE;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

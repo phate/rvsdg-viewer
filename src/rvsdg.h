@@ -26,6 +26,8 @@
 #define TEXT_CLEARANCE 10
 #define NODE_HEIGHT 100
 
+class DiagramScene;
+
 ///////////////////////////////////////////////////////////////////////////////
 
 class Element {
@@ -122,10 +124,9 @@ public:
   virtual unsigned getWidth() {
     return 0;
   }
-  virtual QGraphicsItem *getItem(unsigned x, unsigned y) {
-    Q_UNUSED(x);
-    Q_UNUSED(y);
-    return NULL;
+  virtual unsigned addItem(DiagramScene *scene) {
+    Q_UNUSED(scene);
+    return 0;
   }
 };
 
@@ -175,7 +176,7 @@ public:
     return getEdge(n, NULL);
   }
 
-  virtual Element *getEdge(unsigned n, Element **source) {
+  Element *getEdge(unsigned n, Element **source) {
     for(auto it : outputs) {
       if(n < it->getNumEdges()) {
         if(source) *source = it;
@@ -194,7 +195,7 @@ public:
 
   unsigned getWidth();
 
-  QGraphicsItem *getItem(unsigned x, unsigned y);
+  unsigned addItem(DiagramScene *scene);
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -277,7 +278,7 @@ public:
   unsigned getWidth() {
     return INPUTOUTPUT_SIZE;
   }
-  QGraphicsItem *getItem(unsigned x, unsigned y);
+  unsigned addItem(DiagramScene *scene);
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -288,7 +289,7 @@ public:
   unsigned getWidth() {
     return INPUTOUTPUT_SIZE;
   }
-  QGraphicsItem *getItem(unsigned x, unsigned y);
+  unsigned addItem(DiagramScene *scene);
 };
 
 ///////////////////////////////////////////////////////////////////////////////
