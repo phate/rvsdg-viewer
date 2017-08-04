@@ -39,6 +39,8 @@ private:
   QAction *exitAct;
   QAction *aboutAct;
   QAction *aboutQtAct;
+  QAction *zoomInAct;
+  QAction *zoomOutAct;
 };
 
 #endif

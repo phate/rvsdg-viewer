@@ -1,6 +1,7 @@
 #include <QDomDocument>
 
 #include "mainwindow.h"
+#include "diagramview.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -48,7 +49,7 @@ void MainWindow::init() {
   scene = new DiagramScene(this);
   scene->setSceneRect(QRectF(0, 0, 1024, 512));
 
-  graphicsView = new QGraphicsView(scene);
+  graphicsView = new DiagramView(scene);
   
   splitter = new QSplitter;
   splitter->addWidget(treeView);
@@ -63,6 +64,14 @@ void MainWindow::init() {
   openAct->setShortcuts(QKeySequence::Open);
   openAct->setStatusTip(tr("Open an existing file"));
   connect(openAct, SIGNAL(triggered()), this, SLOT(open()));
+
+  zoomInAct = new QAction(QIcon(":/images/zoomin.png"), tr("&ZoomIn..."), this);
+  zoomInAct->setStatusTip(tr("ZoomIn"));
+  connect(zoomInAct, SIGNAL(triggered()), graphicsView, SLOT(zoomInEvent()));
+
+  zoomOutAct = new QAction(QIcon(":/images/zoomout.png"), tr("&ZoomOut..."), this);
+  zoomOutAct->setStatusTip(tr("ZoomIn"));
+  connect(zoomOutAct, SIGNAL(triggered()), graphicsView, SLOT(zoomOutEvent()));
 
   exitAct = new QAction(tr("E&xit"), this);
   exitAct->setShortcuts(QKeySequence::Quit);
@@ -92,6 +101,8 @@ void MainWindow::init() {
   // toolbar
   fileToolBar = addToolBar(tr("File"));
   fileToolBar->addAction(openAct);
+  fileToolBar->addAction(zoomInAct);
+  fileToolBar->addAction(zoomOutAct);
 
   // statusbar
   statusBar()->showMessage(tr("Ready"));
