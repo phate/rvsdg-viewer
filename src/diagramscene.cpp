@@ -142,16 +142,14 @@ void DiagramScene::drawRegion(Region *region) {
   }
 
   // find vertical edge routing corridors
-  std::vector<unsigned> currentRoutingXs(columnWidths.size());
-  currentRoutingXs[0] = SPACING_X - LINE_CLEARANCE;
-  int i = 1;
-  for(auto width : columnWidths) {
-    currentRoutingXs[i] = currentRoutingXs[i-1] + SPACING_X + width;
-    i++;
+  std::vector<unsigned> currentRoutingXs;
+  currentRoutingXs.push_back(SPACING_X - LINE_CLEARANCE);
+  for(unsigned i = 1; i < columnWidths.size(); i++) {
+    currentRoutingXs.push_back(currentRoutingXs[i-1] + SPACING_X + columnWidths[i]);
   }
 
   // find horizontal edge routing corridors
-  std::vector<unsigned> currentRoutingYs(columnWidths.size());
+  std::vector<unsigned> currentRoutingYs(layers.size(), 0);
 
   // display vertices
   unsigned x = SPACING_X;
