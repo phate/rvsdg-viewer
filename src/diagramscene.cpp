@@ -142,7 +142,7 @@ void DiagramScene::drawRegion(Region *region) {
   int columns = columnWidths.size();
 
   std::vector<unsigned> rowSpacing(rows, LINE_CLEARANCE);
-  std::vector<unsigned> columnSpacing(columns, LINE_CLEARANCE);
+  std::vector<unsigned> columnSpacing(columns+1, LINE_CLEARANCE);
 
   // find row and column spacing
   for(auto layer : layers) {
@@ -161,6 +161,7 @@ void DiagramScene::drawRegion(Region *region) {
       }
     }
   }
+  columnSpacing[columns] = 0;
 
   // vertical edge routing corridors
   std::vector<unsigned> currentRoutingXs;
