@@ -5,9 +5,6 @@
 #include <QGraphicsSceneMouseEvent>
 #include <QGraphicsEllipseItem>
 
-#define SPACING_X 100
-#define SPACING_Y 100
-
 #define LINE_CLEARANCE 10
 
 DiagramScene::DiagramScene(QObject *parent) : QGraphicsScene(parent) {
@@ -141,46 +138,71 @@ void DiagramScene::drawRegion(Region *region) {
     }
   }
 
-  // find vertical edge routing corridors
-  std::vector<unsigned> currentRoutingXs;
-  currentRoutingXs.push_back(SPACING_X - LINE_CLEARANCE);
-  for(unsigned i = 1; i < columnWidths.size(); i++) {
-    currentRoutingXs.push_back(currentRoutingXs[i-1] + SPACING_X + columnWidths[i]);
+  int rows = layers.size();
+  int columns = columnWidths.size();
+
+  std::vector<unsigned> rowSpacing(rows, LINE_CLEARANCE);
+  std::vector<unsigned> columnSpacing(columns, LINE_CLEARANCE);
+
+  // find row and column spacing
+  for(auto layer : layers) {
+    for(auto vertex : *layer) {
+      for(unsigned i = 0; i < vertex->getNumEdges(); i++) {
+        unsigned sourceRow = vertex->getRow();
+        unsigned targetRow = vertex->getEdge(i)->getRow();
+        unsigned targetColumn = vertex->getEdge(i)->getColumn();
+
+        rowSpacing[sourceRow] += LINE_CLEARANCE;
+
+        if((sourceRow - targetRow) > 1) {
+          rowSpacing[targetRow+1] += LINE_CLEARANCE;
+          columnSpacing[targetColumn] += LINE_CLEARANCE;
+        }
+      }
+    }
   }
 
-  // find horizontal edge routing corridors
+  // vertical edge routing corridors
+  std::vector<unsigned> currentRoutingXs;
+  currentRoutingXs.push_back(columnSpacing[0] - LINE_CLEARANCE);
+  for(unsigned i = 1; i < columnWidths.size(); i++) {
+    currentRoutingXs.push_back(currentRoutingXs[i-1] + columnSpacing[i] + columnWidths[i-1]);
+  }
+
+  // horizontal edge routing corridors
   std::vector<unsigned> currentRoutingYs(layers.size(), 0);
 
   // display vertices
-  unsigned x = SPACING_X;
-  unsigned y = SPACING_Y;
+  unsigned x = columnSpacing[0];
+  unsigned y = LINE_CLEARANCE;
   unsigned maxHeight = 0;
 
   unsigned sceneWidth = 0;
 
   int l = layers.size() - 1;
 
+  int row = rows-1;
   for(auto layer = layers.rbegin(); layer != layers.rend(); layer++) {
-    int i = 0;
+    int col = 0;
     currentRoutingYs[l--] = y - LINE_CLEARANCE;
     for(auto vertex : *(*layer)) {
 
       // set vertex position
       int width = vertex->getWidth();
-      int posX = x+(columnWidths[i]-width)/2;
+      int posX = x+(columnWidths[col]-width)/2;
       vertex->setPos(posX, y);
 
       // add graphics item for this vertex
       unsigned height = vertex->addItem(this);
 
-      x += SPACING_X + columnWidths[i];
+      x += columnSpacing[col+1] + columnWidths[col];
       if(x > sceneWidth) sceneWidth = x;
       if(height > maxHeight) maxHeight = height;
-      i++;
+      col++;
     }
 
-    x = SPACING_X;
-    y += SPACING_Y + maxHeight;
+    x = columnSpacing[0];
+    y += rowSpacing[row--] + maxHeight;
   }
 
   // display edges
@@ -207,11 +229,11 @@ void DiagramScene::drawRegion(Region *region) {
           currentRoutingYs[target->getRow()] -= LINE_CLEARANCE;
 
         } else {
-          unsigned currentRoutingYSource = currentRoutingYs[source->getRow()-1];
+          unsigned currentRoutingY = currentRoutingYs[source->getRow()-1];
 
-          addLine(source->getX(), source->getY(), source->getX(), currentRoutingYSource);
-          addLine(source->getX(), currentRoutingYSource, target->getX(), currentRoutingYSource);
-          addLine(target->getX(), currentRoutingYSource, target->getX(), target->getY());
+          addLine(source->getX(), source->getY(), source->getX(), currentRoutingY);
+          addLine(source->getX(), currentRoutingY, target->getX(), currentRoutingY);
+          addLine(target->getX(), currentRoutingY, target->getX(), target->getY());
 
           currentRoutingYs[source->getRow()-1] -= LINE_CLEARANCE;
         }
@@ -219,7 +241,7 @@ void DiagramScene::drawRegion(Region *region) {
     }
   }
 
-  setSceneRect(QRectF(0, 0, sceneWidth + SPACING_X, y + SPACING_Y));
+  setSceneRect(QRectF(0, 0, sceneWidth, y));
 
   ///////////////////////////////////////////////////////////////////////////////
   // cleanup
