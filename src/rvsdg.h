@@ -20,11 +20,17 @@
 #define ATTR_ID "id"
 #define ATTR_SOURCE "source"
 #define ATTR_TARGET "target"
+#define ATTR_NAME "name"
+#define ATTR_TYPE "type"
 
 #define INPUTOUTPUT_SIZE 10
 #define INPUTOUTPUT_CLEARANCE 10
 #define TEXT_CLEARANCE 10
 #define NODE_HEIGHT 100
+
+#define SIMPLE_NODE_COLOR 200,200,200
+#define GAMMA_NODE_COLOR 255,200,200
+#define LAMBDA_NODE_COLOR 200,255,200
 
 class DiagramScene;
 
@@ -132,7 +138,14 @@ public:
 
 ///////////////////////////////////////////////////////////////////////////////
 
+enum NodeType {
+  SIMPLE, LAMBDA, GAMMA
+};
+
 class Node : public Element {
+
+  QString name;
+  NodeType type;
 
 public:
   std::vector<Element*> inputs;
@@ -140,7 +153,10 @@ public:
 
   // constructors and destructor
 
-  Node(QString id, unsigned treeviewRow, Element *parent) : Element(id, treeviewRow, parent) {}
+  Node(QString id, QString name, NodeType type, unsigned treeviewRow, Element *parent) : Element(id, treeviewRow, parent) {
+    this->name = name;
+    this->type = type;
+  }
 
   ~Node() {
     for(auto it : inputs) {

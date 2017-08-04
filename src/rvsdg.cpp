@@ -12,10 +12,16 @@ int Element::constructFromXml(const QDomElement &element, int treeviewRow, std::
   Element *child = this;
 
   QString childId = element.attribute(ATTR_ID, "");
+  QString childName = element.attribute(ATTR_NAME, "");
+  QString childTypeS = element.attribute(ATTR_TYPE, "");
+
+  NodeType childType = SIMPLE;
+  if(childTypeS == "lambda") childType = LAMBDA;
+  if(childTypeS == "gamma") childType = GAMMA;
 
   // FIXME: dangerous casting, will segfault with invalid XML
   if(element.tagName() == TAG_NODE) {
-    child = new Node(childId, treeviewRow++, this);
+    child = new Node(childId, childName, childType, treeviewRow++, this);
     appendChild(child);
 
   } else if(element.tagName() == TAG_REGION) {
@@ -63,6 +69,9 @@ unsigned Node::getWidth() {
   // FIXME: find a way to avoid creating a dummy textitem just for the size
   QGraphicsTextItem *text = new QGraphicsTextItem(id);
   unsigned textwidth = text->boundingRect().width() + TEXT_CLEARANCE*2;
+  text = new QGraphicsTextItem(name);
+  if(textwidth > width) width = textwidth;
+  textwidth = text->boundingRect().width() + TEXT_CLEARANCE*2;
   if(textwidth > width) width = textwidth;
   delete text;
 
@@ -81,8 +90,22 @@ unsigned Node::addItem(DiagramScene *scene) {
   QGraphicsPolygonItem *poly = new QGraphicsPolygonItem(polygon);
   poly->setPos(QPointF(x, y));
 
-  QGraphicsTextItem *text = new QGraphicsTextItem(id, poly);
-  text->setPos(QPointF(TEXT_CLEARANCE, NODE_HEIGHT/2-text->boundingRect().height()/2));
+  switch(type) {
+    case SIMPLE:
+      poly->setBrush(QBrush(QColor(SIMPLE_NODE_COLOR)));
+      break;
+    case LAMBDA:
+      poly->setBrush(QBrush(QColor(LAMBDA_NODE_COLOR)));
+      break;
+    case GAMMA:
+      poly->setBrush(QBrush(QColor(GAMMA_NODE_COLOR)));
+      break;
+  }
+
+  QGraphicsTextItem *text = new QGraphicsTextItem(name, poly);
+  text->setPos(QPointF(TEXT_CLEARANCE, NODE_HEIGHT/2-text->boundingRect().height()));
+  text = new QGraphicsTextItem(id, poly);
+  text->setPos(QPointF(TEXT_CLEARANCE, NODE_HEIGHT/2));
 
   int xx = INPUTOUTPUT_CLEARANCE;
 
