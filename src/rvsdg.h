@@ -112,6 +112,9 @@ public:
   virtual bool isRegion() {
     return false;
   }
+  virtual bool isSimpleNode() {
+    return false;
+  }
   virtual QString getType() {
     return QString("");
   }
@@ -234,6 +237,11 @@ public:
 
   QString getType() {
     return QString("Node");
+  }
+
+  bool isSimpleNode() {
+    if(children.size() == 0) return true;
+    return false;
   }
 
   // graphical information

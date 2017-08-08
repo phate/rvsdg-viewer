@@ -195,7 +195,18 @@ QModelIndex Model::index(int treeviewRow, int column, const QModelIndex &parent)
   else
     parentEl = static_cast<Element*>(parent.internalPointer());
 
-  Element *childEl = parentEl->children[treeviewRow];
+  Element *childEl = NULL;
+
+  int n = 0;
+  for(auto it : parentEl->children) {
+    if(!it->isSimpleNode()) {
+      if(treeviewRow == n) {
+        childEl = it;
+        break;
+      }
+      n++;
+    }
+  }
 
   if (childEl) return createIndex(treeviewRow, column, childEl);
   else return QModelIndex();
@@ -217,7 +228,11 @@ QModelIndex Model::parent(const QModelIndex &index) const {
 
 int Model::rowCount(const QModelIndex &parent) const {
   if (parent.isValid()) {
-    return static_cast<Element*>(parent.internalPointer())->children.size();
+    unsigned n = 0;
+    for(auto child : static_cast<Element*>(parent.internalPointer())->children) {
+      if(!child->isSimpleNode()) n++;
+    }
+    return n;
   } else {
     return top->children.size();
   }
