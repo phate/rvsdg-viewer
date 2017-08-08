@@ -17,7 +17,9 @@ int Element::constructFromXml(const QDomElement &element, int treeviewRow, std::
 
   NodeType childType = SIMPLE;
   if(childTypeS == "lambda") childType = LAMBDA;
-  if(childTypeS == "gamma") childType = GAMMA;
+  else if(childTypeS == "gamma") childType = GAMMA;
+  else if(childTypeS == "theta") childType = THETA;
+  else if(childTypeS == "phi") childType = PHI;
 
   // FIXME: dangerous casting, will segfault with invalid XML
   if(element.tagName() == TAG_NODE) {
@@ -100,6 +102,12 @@ unsigned Node::addItem(DiagramScene *scene) {
     case GAMMA:
       poly->setBrush(QBrush(QColor(GAMMA_NODE_COLOR)));
       break;
+    case THETA:
+      poly->setBrush(QBrush(QColor(THETA_NODE_COLOR)));
+      break;
+    case PHI:
+      poly->setBrush(QBrush(QColor(PHI_NODE_COLOR)));
+      break;
   }
 
   QGraphicsTextItem *text = new QGraphicsTextItem(name, poly);
@@ -116,6 +124,7 @@ unsigned Node::addItem(DiagramScene *scene) {
       << QPointF(-INPUTOUTPUT_SIZE/2,INPUTOUTPUT_SIZE)
       << QPointF(INPUTOUTPUT_SIZE/2,INPUTOUTPUT_SIZE);
     QGraphicsPolygonItem *inputItem = new QGraphicsPolygonItem(p, poly);
+    inputItem->setData(0, QVariant::fromValue((void*)input));
     inputItem->setPos(QPointF(xx, 0));
     xx += INPUTOUTPUT_CLEARANCE + INPUTOUTPUT_SIZE;
   }
@@ -129,6 +138,7 @@ unsigned Node::addItem(DiagramScene *scene) {
       << QPointF(-INPUTOUTPUT_SIZE/2,-INPUTOUTPUT_SIZE)
       << QPointF(INPUTOUTPUT_SIZE/2,-INPUTOUTPUT_SIZE);
     QGraphicsPolygonItem *outputItem = new QGraphicsPolygonItem(p, poly);
+    outputItem->setData(0, QVariant::fromValue((void*)output));
     outputItem->setPos(QPointF(xx, 100));
     xx += INPUTOUTPUT_CLEARANCE + INPUTOUTPUT_SIZE;
   }
@@ -147,6 +157,7 @@ unsigned Argument::addItem(DiagramScene *scene) {
           << QPointF(INPUTOUTPUT_SIZE/2,-INPUTOUTPUT_SIZE);
 
   QGraphicsPolygonItem *poly = new QGraphicsPolygonItem(polygon);
+  poly->setData(0, QVariant::fromValue((void*)this));
   poly->setPos(QPointF(x, y));
 
   scene->addItem(poly);
@@ -163,6 +174,7 @@ unsigned Result::addItem(DiagramScene *scene) {
           << QPointF(INPUTOUTPUT_SIZE/2,INPUTOUTPUT_SIZE);
 
   QGraphicsPolygonItem *poly = new QGraphicsPolygonItem(polygon);
+  poly->setData(0, QVariant::fromValue((void*)this));
   poly->setPos(QPointF(x, y));
 
   scene->addItem(poly);

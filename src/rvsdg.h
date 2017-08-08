@@ -28,9 +28,11 @@
 #define TEXT_CLEARANCE 10
 #define NODE_HEIGHT 100
 
-#define SIMPLE_NODE_COLOR 200,200,200
-#define GAMMA_NODE_COLOR 255,200,200
-#define LAMBDA_NODE_COLOR 200,255,200
+#define SIMPLE_NODE_COLOR Qt::gray
+#define GAMMA_NODE_COLOR  Qt::green
+#define LAMBDA_NODE_COLOR Qt::blue
+#define THETA_NODE_COLOR  Qt::red
+#define PHI_NODE_COLOR    255,165,0
 
 class DiagramScene;
 
@@ -98,6 +100,15 @@ public:
     *source = this;
     return edges[n];
   }
+  virtual void setLineSegments(unsigned n, std::vector<QGraphicsLineItem*>lines) {
+    Q_UNUSED(n);
+    Q_UNUSED(lines);
+  }
+  virtual std::vector<QGraphicsLineItem*> getLineSegments() {
+    return std::vector<QGraphicsLineItem*>(0);
+  }
+  virtual void clearLineSegments() {
+  }
   virtual bool isRegion() {
     return false;
   }
@@ -139,7 +150,7 @@ public:
 ///////////////////////////////////////////////////////////////////////////////
 
 enum NodeType {
-  SIMPLE, LAMBDA, GAMMA
+  SIMPLE, LAMBDA, GAMMA, THETA, PHI
 };
 
 class Node : public Element {
@@ -203,6 +214,24 @@ public:
     return NULL;
   }
 
+  void setLineSegments(unsigned n, std::vector<QGraphicsLineItem*>lines) {
+    for(auto it : outputs) {
+      if(n < it->getNumEdges()) {
+        it->setLineSegments(n, lines);
+      }
+      n -= it->getNumEdges();
+    }
+  }
+
+  void clearLineSegments() {
+    for(auto it : outputs) {
+      it->clearLineSegments();
+    }
+    for(auto it : inputs) {
+      it->clearLineSegments();
+    }
+  }
+
   QString getType() {
     return QString("Node");
   }
@@ -218,10 +247,22 @@ public:
 
 class Input : public Element {
 
+  std::vector<QGraphicsLineItem*> lineSegments;
+
 public:
   Input(QString id, Element *parent) : Element(id, 0, parent) {}
   Element *getVertex() {
     return parent;
+  }
+  void setLineSegments(unsigned n, std::vector<QGraphicsLineItem*>lines) {
+    Q_UNUSED(n);
+    lineSegments = lines;
+  }
+  void clearLineSegments() {
+    lineSegments.clear();
+  }
+  std::vector<QGraphicsLineItem*> getLineSegments() {
+    return lineSegments;
   }
   unsigned getRow() {
     return parent->getRow();
@@ -241,10 +282,22 @@ public:
 
 class Output : public Element {
 
+  std::vector<QGraphicsLineItem*> lineSegments;
+
 public:
   Output(QString id, Element *parent) : Element(id, 0, parent) {}
   Element *getVertex() {
     return parent;
+  }
+  void setLineSegments(unsigned n, std::vector<QGraphicsLineItem*>lines) {
+    Q_UNUSED(n);
+    lineSegments.insert(lineSegments.end(), lines.begin(), lines.end());
+  }
+  void clearLineSegments() {
+    lineSegments.clear();
+  }
+  std::vector<QGraphicsLineItem*> getLineSegments() {
+    return lineSegments;
   }
   unsigned getRow() {
     return parent->getRow();
@@ -289,19 +342,43 @@ public:
 ///////////////////////////////////////////////////////////////////////////////
 
 class Argument : public Element {
+  std::vector<QGraphicsLineItem*> lineSegments;
+
 public:
   Argument(QString id, Element *parent) : Element(id, 0, parent) {}
   unsigned getWidth() {
     return INPUTOUTPUT_SIZE;
   }
   unsigned addItem(DiagramScene *scene);
+  void setLineSegments(unsigned n, std::vector<QGraphicsLineItem*>lines) {
+    Q_UNUSED(n);
+    lineSegments.insert(lineSegments.end(), lines.begin(), lines.end());
+  }
+  std::vector<QGraphicsLineItem*> getLineSegments() {
+    return lineSegments;
+  }
+  void clearLineSegments() {
+    lineSegments.clear();
+  }
 };
 
 ///////////////////////////////////////////////////////////////////////////////
 
 class Result : public Element {
+  std::vector<QGraphicsLineItem*> lineSegments;
+
 public:
   Result(QString id, Element *parent) : Element(id, 0, parent) {}
+  void setLineSegments(unsigned n, std::vector<QGraphicsLineItem*>lines) {
+    Q_UNUSED(n);
+    lineSegments = lines;
+  }
+  std::vector<QGraphicsLineItem*> getLineSegments() {
+    return lineSegments;
+  }
+  void clearLineSegments() {
+    lineSegments.clear();
+  }
   unsigned getWidth() {
     return INPUTOUTPUT_SIZE;
   }

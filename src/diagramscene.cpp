@@ -8,6 +8,14 @@
 #define LINE_CLEARANCE 10
 
 DiagramScene::DiagramScene(QObject *parent) : QGraphicsScene(parent) {
+  colorCounter = 0;
+  zvalue = 0;
+
+  colors[0] = Qt::red;
+  colors[1] = Qt::green;
+  colors[2] = Qt::blue;
+  colors[3] = Qt::yellow;
+  colors[4] = Qt::cyan;
 }
 
 DiagramScene::~DiagramScene() {
@@ -119,6 +127,9 @@ void DiagramScene::drawRegion(Region *region) {
   ///////////////////////////////////////////////////////////////////////////////
   // display graph
   
+  colorCounter = 0;
+  zvalue = 0;
+
   // remove previous items from scene
   clear();
 
@@ -164,14 +175,15 @@ void DiagramScene::drawRegion(Region *region) {
   columnSpacing[columns] = 0;
 
   // vertical edge routing corridors
-  std::vector<unsigned> currentRoutingXs;
+  currentRoutingXs.clear();
   currentRoutingXs.push_back(columnSpacing[0] - LINE_CLEARANCE);
   for(unsigned i = 1; i < columnWidths.size(); i++) {
     currentRoutingXs.push_back(currentRoutingXs[i-1] + columnSpacing[i] + columnWidths[i-1]);
   }
 
   // horizontal edge routing corridors
-  std::vector<unsigned> currentRoutingYs(layers.size(), 0);
+  currentRoutingYs.clear();
+  currentRoutingYs.resize(layers.size(), 0);
 
   // display vertices
   unsigned x = columnSpacing[0];
@@ -209,36 +221,7 @@ void DiagramScene::drawRegion(Region *region) {
   // display edges
   for(auto layer : layers) {
     for(auto vertex : *layer) {
-      for(unsigned i = 0; i < vertex->getNumEdges(); i++) {
-        Element *source = NULL;
-        Element *target = vertex->getEdge(i, &source);
-
-        if((source->getRow() - target->getRow()) > 1) {
-          // edge is spanning more than one row, add polyline
-          unsigned currentRoutingX = currentRoutingXs[target->getColumn()];
-          unsigned currentRoutingYSource = currentRoutingYs[source->getRow()-1];
-          unsigned currentRoutingYTarget = currentRoutingYs[target->getRow()];
-
-          addLine(source->getX(), source->getY(), source->getX(), currentRoutingYSource);
-          addLine(source->getX(), currentRoutingYSource, currentRoutingX, currentRoutingYSource);
-          addLine(currentRoutingX, currentRoutingYSource, currentRoutingX, currentRoutingYTarget);
-          addLine(currentRoutingX, currentRoutingYTarget, target->getX(), currentRoutingYTarget);
-          addLine(target->getX(), currentRoutingYTarget, target->getX(), target->getY());
-
-          currentRoutingXs[target->getColumn()] -= LINE_CLEARANCE;
-          currentRoutingYs[source->getRow()-1] -= LINE_CLEARANCE;
-          currentRoutingYs[target->getRow()] -= LINE_CLEARANCE;
-
-        } else {
-          unsigned currentRoutingY = currentRoutingYs[source->getRow()-1];
-
-          addLine(source->getX(), source->getY(), source->getX(), currentRoutingY);
-          addLine(source->getX(), currentRoutingY, target->getX(), currentRoutingY);
-          addLine(target->getX(), currentRoutingY, target->getX(), target->getY());
-
-          currentRoutingYs[source->getRow()-1] -= LINE_CLEARANCE;
-        }
-      }
+      routeEdges(vertex, Qt::black);
     }
   }
 
@@ -255,6 +238,64 @@ void DiagramScene::drawRegion(Region *region) {
 void DiagramScene::mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent) {
   if (mouseEvent->button() == Qt::LeftButton) {
     QGraphicsItem *item = itemAt(mouseEvent->scenePos(), QTransform());
-    if(item) printf("%d %d\n", (int)item->scenePos().x(), (int)item->scenePos().y());
+    Element *el = (Element*)item->data(0).value<void*>();
+    if(el) {
+      std::vector<QGraphicsLineItem*> lines = el->getLineSegments();
+      for(auto line : lines) {
+        if(line) {
+          line->setPen(QPen(colors[colorCounter]));
+          line->setZValue(zvalue++);
+        }
+      }
+      colorCounter++;
+      if(colorCounter >= 5) colorCounter = 0;
+    }
+  }
+}
+
+void DiagramScene::routeEdges(Element *vertex, const QColor &color) {
+  vertex->clearLineSegments();
+
+  for(unsigned i = 0; i < vertex->getNumEdges(); i++) {
+    Element *source = NULL;
+    Element *target = vertex->getEdge(i, &source);
+
+    QPen pen(color);
+
+    std::vector<QGraphicsLineItem*> lines(0);
+
+    if((source->getRow() - target->getRow()) > 1) {
+      // edge is spanning more than one row, add polyline
+      unsigned currentRoutingX = currentRoutingXs[target->getColumn()];
+      unsigned currentRoutingYSource = currentRoutingYs[source->getRow()-1];
+      unsigned currentRoutingYTarget = currentRoutingYs[target->getRow()];
+
+      lines.resize(5);
+
+      lines.push_back(addLine(source->getX(), source->getY(), source->getX(), currentRoutingYSource, pen));
+      lines.push_back(addLine(source->getX(), currentRoutingYSource, currentRoutingX, currentRoutingYSource, pen));
+      lines.push_back(addLine(currentRoutingX, currentRoutingYSource, currentRoutingX, currentRoutingYTarget, pen));
+      lines.push_back(addLine(currentRoutingX, currentRoutingYTarget, target->getX(), currentRoutingYTarget, pen));
+      lines.push_back(addLine(target->getX(), currentRoutingYTarget, target->getX(), target->getY(), pen));
+      
+      currentRoutingXs[target->getColumn()] -= LINE_CLEARANCE;
+      currentRoutingYs[source->getRow()-1] -= LINE_CLEARANCE;
+      currentRoutingYs[target->getRow()] -= LINE_CLEARANCE;
+
+    } else {
+      unsigned currentRoutingY = currentRoutingYs[source->getRow()-1];
+
+      lines.resize(3);
+
+      lines.push_back(addLine(source->getX(), source->getY(), source->getX(), currentRoutingY, pen));
+      lines.push_back(addLine(source->getX(), currentRoutingY, target->getX(), currentRoutingY, pen));
+      lines.push_back(addLine(target->getX(), currentRoutingY, target->getX(), target->getY(), pen));
+      
+      currentRoutingYs[source->getRow()-1] -= LINE_CLEARANCE;
+    }
+
+    target->setLineSegments(i, lines);
+
+    vertex->setLineSegments(i, lines);
   }
 }
