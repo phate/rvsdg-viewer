@@ -4,8 +4,10 @@
 #include <QtWidgets>
 #include <QTreeView>
 #include <QMainWindow>
+
 #include "diagramscene.h"
 #include "rvsdg.h"
+#include "model.h"
 
 class MainWindow : public QMainWindow {
   Q_OBJECT

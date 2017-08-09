@@ -1,3 +1,6 @@
+#ifndef DIAGRAMVIEW_H
+#define DIAGRAMVIEW_H
+
 #include <QGraphicsView>
 #include <QGraphicsScene>
 #include <QGraphicsEllipseItem>
@@ -22,3 +25,5 @@ public slots:
     scale(SCALE_OUT_FACTOR, SCALE_OUT_FACTOR);
   }
 };
+
+#endif

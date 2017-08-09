@@ -16,11 +16,8 @@ DiagramScene::DiagramScene(QObject *parent) : QGraphicsScene(parent) {
   colors[4] = Qt::cyan;
 }
 
-DiagramScene::~DiagramScene() {
-}
-
-void DiagramScene::drawRegion(Region *region) {
-  lastRegion = region;
+void DiagramScene::drawElement(Element *element) {
+  lastElement = element;
 
   zvalue = 0;
   colorCounter = 0;
@@ -28,9 +25,13 @@ void DiagramScene::drawRegion(Region *region) {
   clear();
 
   QGraphicsLineItem *item = new QGraphicsLineItem();
-  region->appendItems(item);
+  item->setPos(0,0);
+  element->appendItems(item);
+  element->setPos(0,0);
+
   addItem(item);
-  setSceneRect(QRectF(0, 0, region->getWidth(), region->getHeight()));
+
+  setSceneRect(QRectF(0, 0, element->getWidth(), element->getHeight()));
 }
 
 void DiagramScene::mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent) {
@@ -45,8 +46,7 @@ void DiagramScene::mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent) {
           line->setZValue(zvalue++);
         }
       }
-      colorCounter++;
-      if(colorCounter >= 5) colorCounter = 0;
+      colorCounter = (colorCounter + 1) % DEFINED_COLORS;
     }
   }
 }
@@ -59,7 +59,7 @@ void DiagramScene::mouseDoubleClickEvent(QGraphicsSceneMouseEvent *mouseEvent) {
       if(el->isComplexNode()) {
         Node *node = (Node*)el;
         node->toggleExpanded();
-        drawRegion(lastRegion);
+        drawElement(lastElement);
       }
     }
   }

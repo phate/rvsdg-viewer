@@ -4,18 +4,20 @@
 #include <QGraphicsScene>
 #include "rvsdg.h"
 
+#define DEFINED_COLORS 5
+
 class DiagramScene : public QGraphicsScene {
   Q_OBJECT
 
   unsigned colorCounter;
-  QColor colors[10];
+  QColor colors[DEFINED_COLORS];
   unsigned zvalue;
-  Region *lastRegion;
+  Element *lastElement;
 
 public:
   explicit DiagramScene(QObject *parent = 0);
-  ~DiagramScene();
-  void drawRegion(Region *region);
+  ~DiagramScene() {}
+  void drawElement(Element *element);
   void mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent);
   void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *mouseEvent);
 };

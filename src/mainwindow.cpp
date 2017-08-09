@@ -33,9 +33,7 @@ void MainWindow::about() {
 
 void MainWindow::regionClicked(const QModelIndex &index) {
   Element *el = static_cast<Element*>(index.internalPointer());
-  if(el->isRegion()) {
-    scene->drawRegion(static_cast<Region*>(el));
-  }
+  scene->drawElement(el);
 }
 
 void MainWindow::init() {
