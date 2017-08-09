@@ -27,8 +27,10 @@
 #define INPUTOUTPUT_CLEARANCE 10
 #define TEXT_CLEARANCE 10
 #define NODE_HEIGHT 100
+#define LINE_CLEARANCE 10
+#define REGION_CLEARANCE 10
 
-#define SIMPLE_NODE_COLOR Qt::gray
+#define NODE_COLOR Qt::gray
 #define GAMMA_NODE_COLOR  Qt::green
 #define LAMBDA_NODE_COLOR Qt::blue
 #define THETA_NODE_COLOR  Qt::red
@@ -115,13 +117,16 @@ public:
   virtual bool isSimpleNode() {
     return false;
   }
+  virtual bool isComplexNode() {
+    return false;
+  }
   virtual QString getType() {
     return QString("");
   }
 
   // graphical information
 
-  void setPos(unsigned x, unsigned y) {
+  virtual void setPos(unsigned x, unsigned y) {
     this->x = x;
     this->y = y;
   }
@@ -144,22 +149,28 @@ public:
   virtual unsigned getWidth() {
     return 0;
   }
-  virtual unsigned addItem(DiagramScene *scene) {
-    Q_UNUSED(scene);
+  virtual unsigned getHeight() {
     return 0;
+  }
+  virtual void appendItems(QGraphicsItem *parent) {
+    Q_UNUSED(parent);
   }
 };
 
 ///////////////////////////////////////////////////////////////////////////////
 
 enum NodeType {
-  SIMPLE, LAMBDA, GAMMA, THETA, PHI
+  NODE, LAMBDA, GAMMA, THETA, PHI
 };
 
 class Node : public Element {
 
+  unsigned width;
+  unsigned height;
   QString name;
   NodeType type;
+  QGraphicsPolygonItem *baseItem;
+  bool expanded;
 
 public:
   std::vector<Element*> inputs;
@@ -170,6 +181,9 @@ public:
   Node(QString id, QString name, NodeType type, unsigned treeviewRow, Element *parent) : Element(id, treeviewRow, parent) {
     this->name = name;
     this->type = type;
+    width = 0;
+    baseItem = NULL;
+    expanded = false;
   }
 
   ~Node() {
@@ -188,7 +202,6 @@ public:
     inputs.insert(inputs.end(), e);
   }
   void appendOutput(Element *e) {
-    e->setPos(outputs.size() * (INPUTOUTPUT_SIZE + INPUTOUTPUT_CLEARANCE) + INPUTOUTPUT_CLEARANCE + INPUTOUTPUT_CLEARANCE/2, NODE_HEIGHT);
     outputs.insert(outputs.end(), e);
   }
 
@@ -236,6 +249,18 @@ public:
   }
 
   QString getType() {
+    switch(type) {
+      case LAMBDA: 
+        return QString("Lambda");
+      case GAMMA: 
+        return QString("Gamma");
+      case THETA: 
+        return QString("Theta");
+      case PHI: 
+        return QString("Phi");
+      default:
+        return QString("Node");
+    }
     return QString("Node");
   }
 
@@ -243,12 +268,29 @@ public:
     if(children.size() == 0) return true;
     return false;
   }
+  virtual bool isComplexNode() {
+    return !isSimpleNode();
+  }
 
   // graphical information
 
-  unsigned getWidth();
+  void toggleExpanded() {
+    expanded = !expanded;
+  }
 
-  unsigned addItem(DiagramScene *scene);
+  void setPos(unsigned x, unsigned y) {
+    Element::setPos(x, y);
+    baseItem->setPos(x, y);
+  }
+
+  unsigned getWidth() {
+    return width;
+  }
+  unsigned getHeight() {
+    return height;
+  }
+
+  void appendItems(QGraphicsItem *item);
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -325,14 +367,24 @@ public:
 
 class Region : public Element {
 
+  std::vector<std::vector<Element*>*> layers;
+  unsigned width;
+  unsigned height;
+
+  void layer();
+
 public:
   std::vector<Element*> arguments;
   std::vector<Element*> results;
 
-  Region(QString id, unsigned treeviewRow, Element *parent) : Element(id, treeviewRow, parent) {}
+  Region(QString id, unsigned treeviewRow, Element *parent) : Element(id, treeviewRow, parent) {
+  }
   ~Region() {
     for(auto it : arguments) {
       delete it;
+    }
+    for(auto layer : layers) {
+      delete layer;
     }
   }
   bool isRegion() { return true; }
@@ -345,19 +397,30 @@ public:
   void appendResult(Element *e) {
     results.insert(results.end(), e);
   }
+  unsigned getWidth() {
+    return width;
+  }
+  unsigned getHeight() {
+    return height;
+  }
+  void appendItems(QGraphicsItem *item);
 };
 
 ///////////////////////////////////////////////////////////////////////////////
 
 class Argument : public Element {
   std::vector<QGraphicsLineItem*> lineSegments;
+  QGraphicsPolygonItem *baseItem;
 
 public:
   Argument(QString id, Element *parent) : Element(id, 0, parent) {}
   unsigned getWidth() {
     return INPUTOUTPUT_SIZE;
   }
-  unsigned addItem(DiagramScene *scene);
+  unsigned getHeight() {
+    return INPUTOUTPUT_SIZE;
+  }
+  void appendItems(QGraphicsItem *item);
   void setLineSegments(unsigned n, std::vector<QGraphicsLineItem*>lines) {
     Q_UNUSED(n);
     lineSegments.insert(lineSegments.end(), lines.begin(), lines.end());
@@ -368,12 +431,17 @@ public:
   void clearLineSegments() {
     lineSegments.clear();
   }
+  void setPos(unsigned x, unsigned y) {
+    Element::setPos(x, y);
+    baseItem->setPos(x, y);
+  }
 };
 
 ///////////////////////////////////////////////////////////////////////////////
 
 class Result : public Element {
   std::vector<QGraphicsLineItem*> lineSegments;
+  QGraphicsPolygonItem *baseItem;
 
 public:
   Result(QString id, Element *parent) : Element(id, 0, parent) {}
@@ -390,7 +458,14 @@ public:
   unsigned getWidth() {
     return INPUTOUTPUT_SIZE;
   }
-  unsigned addItem(DiagramScene *scene);
+  unsigned getHeight() {
+    return INPUTOUTPUT_SIZE;
+  }
+  void appendItems(QGraphicsItem *item);
+  void setPos(unsigned x, unsigned y) {
+    Element::setPos(x, y);
+    baseItem->setPos(x, y);
+  }
 };
 
 ///////////////////////////////////////////////////////////////////////////////

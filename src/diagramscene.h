@@ -7,21 +7,17 @@
 class DiagramScene : public QGraphicsScene {
   Q_OBJECT
 
-private:
   unsigned colorCounter;
   QColor colors[10];
   unsigned zvalue;
-
-  std::vector<unsigned> currentRoutingXs;
-  std::vector<unsigned> currentRoutingYs;
-
-  void routeEdges(Element *vertex, const QColor &color);
+  Region *lastRegion;
 
 public:
   explicit DiagramScene(QObject *parent = 0);
   ~DiagramScene();
   void drawRegion(Region *region);
   void mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent);
+  void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *mouseEvent);
 };
 
 #endif
