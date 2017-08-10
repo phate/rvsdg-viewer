@@ -12,13 +12,10 @@
 #include <QGraphicsScene>
 #include "rvsdg.h"
 
-#define DEFINED_COLORS 5
-
 class DiagramScene : public QGraphicsScene {
   Q_OBJECT
 
   unsigned colorCounter;
-  QColor colors[DEFINED_COLORS];
   unsigned zvalue;
   Element *lastElement;
 

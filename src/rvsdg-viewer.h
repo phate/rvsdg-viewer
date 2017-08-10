@@ -42,4 +42,18 @@
 #define THETA_NODE_COLOR  Qt::red
 #define PHI_NODE_COLOR    255,165,0
 
+#define EDGE_COLORS { \
+  Qt::red, \
+  Qt::green, \
+  Qt::blue, \
+  Qt::yellow, \
+  Qt::cyan \
+};
+
+///////////////////////////////////////////////////////////////////////////////
+// gui defines
+
+#define SCALE_IN_FACTOR 1.25
+#define SCALE_OUT_FACTOR 0.8
+
 #endif

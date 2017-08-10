@@ -14,8 +14,7 @@
 #include <QGraphicsEllipseItem>
 #include <QMouseEvent>
 
-#define SCALE_IN_FACTOR 1.25
-#define SCALE_OUT_FACTOR 0.8
+#include "rvsdg-viewer.h"
 
 class DiagramView : public QGraphicsView {
 

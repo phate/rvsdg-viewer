@@ -5,15 +5,11 @@
 #include <QGraphicsSceneMouseEvent>
 #include <QGraphicsEllipseItem>
 
+QColor edgeColors[] = EDGE_COLORS
+
 DiagramScene::DiagramScene(QObject *parent) : QGraphicsScene(parent) {
   zvalue = 0;
   colorCounter = 0;
-
-  colors[0] = Qt::red;
-  colors[1] = Qt::green;
-  colors[2] = Qt::blue;
-  colors[3] = Qt::yellow;
-  colors[4] = Qt::cyan;
 }
 
 void DiagramScene::drawElement(Element *element) {
@@ -42,11 +38,11 @@ void DiagramScene::mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent) {
       std::vector<QGraphicsLineItem*> lines = el->getLineSegments();
       for(auto line : lines) {
         if(line) {
-          line->setPen(QPen(colors[colorCounter]));
+          line->setPen(QPen(edgeColors[colorCounter]));
           line->setZValue(zvalue++);
         }
       }
-      colorCounter = (colorCounter + 1) % DEFINED_COLORS;
+      colorCounter = (colorCounter + 1) % (sizeof(edgeColors)/sizeof(edgeColors[0]));
     }
   }
 }
