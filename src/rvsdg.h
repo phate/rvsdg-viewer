@@ -1,3 +1,11 @@
+/******************************************************************************
+ *
+ * Classes representing the elements of the RVSDG graph
+ *
+ * Asbjørn Djupdal 2017
+ *
+ *****************************************************************************/
+
 #ifndef RVSDG_H
 #define RVSDG_H
 
@@ -9,38 +17,7 @@
 #include <QModelIndex>
 #include <QGraphicsPolygonItem>
 
-///////////////////////////////////////////////////////////////////////////////
-// XML defines
-
-#define TAG_NODE     "node"
-#define TAG_REGION   "region"
-#define TAG_EDGE     "edge"
-#define TAG_INPUT    "input"
-#define TAG_OUTPUT   "output"
-#define TAG_ARGUMENT "argument"
-#define TAG_RESULT   "result"
-
-#define ATTR_ID      "id"
-#define ATTR_SOURCE  "source"
-#define ATTR_TARGET  "target"
-#define ATTR_NAME    "name"
-#define ATTR_TYPE    "type"
-
-///////////////////////////////////////////////////////////////////////////////
-// layout defines
-
-#define INPUTOUTPUT_SIZE 10
-#define INPUTOUTPUT_CLEARANCE 10
-#define TEXT_CLEARANCE 10
-#define NODE_HEIGHT 100
-#define LINE_CLEARANCE 10
-#define REGION_CLEARANCE 10
-
-#define NODE_COLOR        Qt::gray
-#define GAMMA_NODE_COLOR  Qt::green
-#define LAMBDA_NODE_COLOR Qt::blue
-#define THETA_NODE_COLOR  Qt::red
-#define PHI_NODE_COLOR    255,165,0
+#include "rvsdg-viewer.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -88,6 +65,13 @@ public:
   // building the graph
 
   int constructFromXml(const QDomElement &element, int treeviewRow, std::map<QString,Element*> &elements);
+
+  virtual Element *parseXmlElement(QString tagName, QString childId) {
+    Q_UNUSED(tagName);
+    Q_UNUSED(childId);
+    Q_UNUSED(parent);
+    return this;
+  }
 
   void appendEdge(Element *e) {
     edges.insert(edges.end(), e);
@@ -171,6 +155,7 @@ public:
   virtual unsigned getHeight() {
     return 0;
   }
+  /* appends QGraphicsItems representing this element to the given parent */
   virtual void appendItems(QGraphicsItem *parent) {
     Q_UNUSED(parent);
   }
@@ -218,6 +203,8 @@ public:
 
   //---------------------------------------------------------------------------
   // building the graph
+
+  Element *parseXmlElement(QString tagName, QString childId);
 
   void appendInput(Element *e) {
     inputs.insert(inputs.end(), e);
@@ -321,6 +308,7 @@ public:
 
 /* RVSDG node input */
 class Input : public Element {
+  QGraphicsPolygonItem *baseItem;
 
 public:
   Input(QString id, Element *parent) : Element(id, 0, parent) {}
@@ -339,12 +327,24 @@ public:
   unsigned getY() {
     return parent->getY() + y;
   }
+  unsigned getWidth() {
+    return INPUTOUTPUT_SIZE;
+  }
+  unsigned getHeight() {
+    return INPUTOUTPUT_SIZE;
+  }
+  void appendItems(QGraphicsItem *item);
+  void setPos(unsigned x, unsigned y) {
+    Element::setPos(x, y);
+    baseItem->setPos(x, y);
+  }
 };
 
 ///////////////////////////////////////////////////////////////////////////////
 
 /* RVSDG node output */
 class Output : public Element {
+  QGraphicsPolygonItem *baseItem;
 
 public:
   Output(QString id, Element *parent) : Element(id, 0, parent) {}
@@ -362,6 +362,17 @@ public:
   }
   unsigned getY() {
     return parent->getY() + y;
+  }
+  unsigned getWidth() {
+    return INPUTOUTPUT_SIZE;
+  }
+  unsigned getHeight() {
+    return INPUTOUTPUT_SIZE;
+  }
+  void appendItems(QGraphicsItem *item);
+  void setPos(unsigned x, unsigned y) {
+    Element::setPos(x, y);
+    baseItem->setPos(x, y);
   }
 };
 
@@ -389,6 +400,7 @@ public:
       delete layer;
     }
   }
+  Element *parseXmlElement(QString tagName, QString childId);
   QString getTypeName() {
     return QString("Region");
   }

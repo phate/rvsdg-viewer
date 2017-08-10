@@ -8,47 +8,40 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
+/* recursive function that constructs the graph from XML DOM elements */
+/* the DOM element represents one child of this object */
 int Element::constructFromXml(const QDomElement &element, int treeviewRow, std::map<QString,Element*> &elements) {
   Element *child = this;
 
+  // create child from DOM element
   QString childId = element.attribute(ATTR_ID, "");
-  QString childName = element.attribute(ATTR_NAME, "");
-  QString childTypeS = element.attribute(ATTR_TYPE, "");
+  QString tagName = element.tagName();
 
-  NodeType childType = NODE;
-  if(childTypeS == "lambda") childType = LAMBDA;
-  else if(childTypeS == "gamma") childType = GAMMA;
-  else if(childTypeS == "theta") childType = THETA;
-  else if(childTypeS == "phi") childType = PHI;
+  if(tagName == TAG_NODE) {
+    QString childName = element.attribute(ATTR_NAME, "");
+    QString childTypeS = element.attribute(ATTR_TYPE, "");
 
-  // FIXME: dangerous casting, will segfault with invalid XML
-  if(element.tagName() == TAG_NODE) {
+    NodeType childType = NODE;
+    if(childTypeS == "lambda") childType = LAMBDA;
+    else if(childTypeS == "gamma") childType = GAMMA;
+    else if(childTypeS == "theta") childType = THETA;
+    else if(childTypeS == "phi") childType = PHI;
+
     child = new Node(childId, childName, childType, treeviewRow++, this);
     appendChild(child);
 
-  } else if(element.tagName() == TAG_REGION) {
+  } else if(tagName == TAG_REGION) {
     child = new Region(childId, treeviewRow++, this);
     appendChild(child);
 
-  } else if(element.tagName() == TAG_INPUT) {
-    child = new Input(childId, this);
-    ((Node*)this)->appendInput(child);
-
-  } else if(element.tagName() == TAG_OUTPUT) {
-    child = new Output(childId, this);
-    ((Node*)this)->appendOutput(child);
-
-  } else if(element.tagName() == TAG_ARGUMENT) {
-    child = new Argument(childId, this);
-    ((Region*)this)->appendArgument(child);
-
-  } else if(element.tagName() == TAG_RESULT) {
-    child = new Result(childId, this);
-    ((Region*)this)->appendResult(child);
+  } else {
+    child = parseXmlElement(tagName, childId);
   }
 
+  // append child to children vector
   if(child != this) elements[childId] = child;
 
+  // loop through all the DOM element children and construct granchildren recursivly
   QDomNode n = element.firstChild();
   int i = 0;
   while(!n.isNull()) {
@@ -60,15 +53,47 @@ int Element::constructFromXml(const QDomElement &element, int treeviewRow, std::
   return treeviewRow;
 }
 
+Element *Node::parseXmlElement(QString tagName, QString childId) {
+  Element *child = this;
+
+  if(tagName == TAG_INPUT) {
+    child = new Input(childId, this);
+    appendInput(child);
+
+  } else if(tagName == TAG_OUTPUT) {
+    child = new Output(childId, this);
+    appendOutput(child);
+  }
+
+  return child;
+}
+
+Element *Region::parseXmlElement(QString tagName, QString childId) {
+  Element *child = this;
+
+  if(tagName == TAG_ARGUMENT) {
+    child = new Argument(childId, this);
+    appendArgument(child);
+
+  } else if(tagName == TAG_RESULT) {
+    child = new Result(childId, this);
+    appendResult(child);
+  }
+
+  return child;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 
 void Node::appendItems(QGraphicsItem *parent) {
   height = NODE_HEIGHT;
 
+  // calculate width based on number of inputs and outputs
   width = inputs.size() * (INPUTOUTPUT_CLEARANCE + INPUTOUTPUT_SIZE);
   unsigned outputWidth = outputs.size() * (INPUTOUTPUT_CLEARANCE + INPUTOUTPUT_SIZE);
   if(outputWidth > width) width = outputWidth;
 
+  // create base item (rectangle)
   baseItem = new QGraphicsPolygonItem(parent);
   baseItem->setPos(QPointF(x, y));
   baseItem->setData(0, QVariant::fromValue((void*)this));
@@ -91,19 +116,22 @@ void Node::appendItems(QGraphicsItem *parent) {
       break;
   }
 
+  // create name text
   QGraphicsTextItem *text = new QGraphicsTextItem(name, baseItem);
-  text->setPos(QPointF(TEXT_CLEARANCE, 50-text->boundingRect().height()));
+  text->setPos(QPointF(TEXT_CLEARANCE, NODE_HEIGHT/2-text->boundingRect().height()));
   text->setData(0, QVariant::fromValue((void*)this));
   unsigned textwidth = text->boundingRect().width() + TEXT_CLEARANCE*2;
   if(textwidth > width) width = textwidth;
 
+  // create id text
   text = new QGraphicsTextItem(id, baseItem);
-  text->setPos(QPointF(TEXT_CLEARANCE, 50));
+  text->setPos(QPointF(TEXT_CLEARANCE, NODE_HEIGHT/2));
   text->setData(0, QVariant::fromValue((void*)this));
   textwidth = text->boundingRect().width() + TEXT_CLEARANCE*2;
   if(textwidth > width) width = textwidth;
 
   //------------------------------------------------------------------------------
+  // for expanded nodes, create items for all children (layed out horizontally)
 
   unsigned regionX = 0;
 
@@ -111,21 +139,26 @@ void Node::appendItems(QGraphicsItem *parent) {
     regionX = REGION_CLEARANCE;
 
     for(auto child : children) {
+      // create a rectangle for the child region
       QGraphicsPolygonItem *poly = new QGraphicsPolygonItem(baseItem);
       poly->setBrush(QBrush(QColor(Qt::white)));
     
+      // create child region
       child->appendItems(poly);
-      poly->setPos(regionX, 100);
+      poly->setPos(regionX, NODE_HEIGHT);
 
+      // update position variables
       regionX += child->getWidth() + REGION_CLEARANCE;
-      if(height < (100 + REGION_CLEARANCE + child->getHeight())) height = 100 + REGION_CLEARANCE + child->getHeight();
+      if(height < (NODE_HEIGHT + REGION_CLEARANCE + child->getHeight())) {
+        height = NODE_HEIGHT + REGION_CLEARANCE + child->getHeight();
+      }
 
+      // now that region size is known, set the polygon for the region rectangle
       QPolygonF polygon;
       polygon << QPointF(0, 0)
               << QPointF(child->getWidth(), 0)
               << QPointF(child->getWidth(), child->getHeight())
               << QPointF(0, child->getHeight());
-
       poly->setPolygon(polygon);
     }
   }
@@ -134,39 +167,27 @@ void Node::appendItems(QGraphicsItem *parent) {
 
   //------------------------------------------------------------------------------
 
+  // create input items
   int xx = INPUTOUTPUT_CLEARANCE;
 
   for(auto input : inputs) {
-    Q_UNUSED(input);
-    QPolygonF p;
-    p << QPointF(0,0)
-      << QPointF(-INPUTOUTPUT_SIZE/2,INPUTOUTPUT_SIZE)
-      << QPointF(INPUTOUTPUT_SIZE/2,INPUTOUTPUT_SIZE);
-    QGraphicsPolygonItem *inputItem = new QGraphicsPolygonItem(p, baseItem);
-    inputItem->setData(0, QVariant::fromValue((void*)input));
-    inputItem->setPos(QPointF(xx, 0));
-    xx += INPUTOUTPUT_CLEARANCE + INPUTOUTPUT_SIZE;
-    input->setPos(xx-2*INPUTOUTPUT_CLEARANCE, 0);
+    input->appendItems(baseItem);
+    input->setPos(xx, 0);
+    xx += INPUTOUTPUT_CLEARANCE + input->getWidth();;
   }
 
-  xx = INPUTOUTPUT_CLEARANCE + INPUTOUTPUT_CLEARANCE/2;
-
+  // create outupt items
+  xx = INPUTOUTPUT_CLEARANCE + INPUTOUTPUT_CLEARANCE/2; // add some to avoid edge overlap
   for(auto output : outputs) {
-    Q_UNUSED(output);
-    QPolygonF p;
-    p << QPointF(0,0)
-      << QPointF(-INPUTOUTPUT_SIZE/2,-INPUTOUTPUT_SIZE)
-      << QPointF(INPUTOUTPUT_SIZE/2,-INPUTOUTPUT_SIZE);
-    QGraphicsPolygonItem *outputItem = new QGraphicsPolygonItem(p, baseItem);
-    outputItem->setData(0, QVariant::fromValue((void*)output));
-    outputItem->setPos(QPointF(xx, height + INPUTOUTPUT_CLEARANCE));
-    xx += INPUTOUTPUT_CLEARANCE + INPUTOUTPUT_SIZE;
-    output->setPos(xx-2*INPUTOUTPUT_CLEARANCE, height + INPUTOUTPUT_CLEARANCE);
+    output->appendItems(baseItem);
+    output->setPos(xx, height + INPUTOUTPUT_CLEARANCE);
+    xx += INPUTOUTPUT_CLEARANCE + output->getWidth();
   }
-  if(outputs.size()) height += INPUTOUTPUT_SIZE;
+  if(outputs.size()) height += outputs[0]->getHeight();
 
   //------------------------------------------------------------------------------
 
+  // now the total node size is known, create the polygon for the node rectangle
   QPolygonF polygon;
   polygon << QPointF(0, 0)
           << QPointF(width, 0)
@@ -182,7 +203,9 @@ void Node::appendItems(QGraphicsItem *parent) {
  * builds the layers bottom-up (layer 0 is bottom layer)
  *****************************************************************************/
 void Region::layer() {
-  if(!layers.size()) {
+
+  if(!layers.size()) { // don't rebuild unnecessary
+
     std::vector<Element*> unassignedNodes = children;
     std::vector<Element*> assignedNodes;
     std::vector<Element*> nodesBelowCurrent;
@@ -281,19 +304,29 @@ void Region::layer() {
 }
 
 void Region::appendItems(QGraphicsItem *parent) {
+
+  //-----------------------------------------------------------------------------
+  // build layers for this region
+
   layer();
 
+  //-----------------------------------------------------------------------------
   // build all vertex graphics items
+  // need to do this now so that all vertex sizes are known during placement
+
   for(auto layer = layers.rbegin(); layer != layers.rend(); layer++) {
     for(auto vertex : *(*layer)) {
       vertex->appendItems(parent);
     }
   }
 
+  //-----------------------------------------------------------------------------
+  // calculate mesh positions for vertices and edges
+
   // find column widths
   std::vector<unsigned> columnWidths(0);
   for(auto layer = layers.rbegin(); layer != layers.rend(); layer++) {
-    // this layer has more columns, increase columnWidths vector
+    // this layer has more columns than previous layers, increase columnWidths vector
     if((*layer)->size() > columnWidths.size()) {
       columnWidths.resize((*layer)->size(), 0);
     }
@@ -313,6 +346,7 @@ void Region::appendItems(QGraphicsItem *parent) {
   std::vector<unsigned> columnSpacing(columns+1, LINE_CLEARANCE);
 
   // find row and column spacing
+  // this is based on the number of edges that must be routed here
   for(auto layer : layers) {
     for(auto vertex : *layer) {
       for(unsigned i = 0; i < vertex->getNumEdges(); i++) {
@@ -344,7 +378,9 @@ void Region::appendItems(QGraphicsItem *parent) {
   currentRoutingYs.clear();
   currentRoutingYs.resize(layers.size(), 0);
 
-  // display vertices
+  //-----------------------------------------------------------------------------
+  // position vertices
+
   unsigned x = columnSpacing[0];
   unsigned y = 2*LINE_CLEARANCE;
   unsigned maxHeight = 0;
@@ -364,7 +400,6 @@ void Region::appendItems(QGraphicsItem *parent) {
       int posX = x+(columnWidths[col]-width)/2;
       vertex->setPos(posX, y);
 
-      // add graphics item for this vertex
       unsigned height = vertex->getHeight();
 
       x += columnSpacing[col+1] + columnWidths[col];
@@ -377,7 +412,9 @@ void Region::appendItems(QGraphicsItem *parent) {
     y += rowSpacing[row--] + maxHeight;
   }
 
-  // display edges
+  //-----------------------------------------------------------------------------
+  // create and display edges
+
   for(auto layer : layers) {
     for(auto vertex : *layer) {
       vertex->clearLineSegments();
@@ -389,7 +426,7 @@ void Region::appendItems(QGraphicsItem *parent) {
         std::vector<QGraphicsLineItem*> lines(0);
 
         if((source->getRow() - target->getRow()) > 1) {
-          // edge is spanning more than one row, add polyline
+          // edge is spanning more than one row
           unsigned currentRoutingX = currentRoutingXs[target->getColumn()];
           unsigned currentRoutingYSource = currentRoutingYs[source->getRow()-1];
           unsigned currentRoutingYTarget = currentRoutingYs[target->getRow()];
@@ -407,6 +444,7 @@ void Region::appendItems(QGraphicsItem *parent) {
           currentRoutingYs[target->getRow()] -= LINE_CLEARANCE;
 
         } else {
+          // edge is between neighbouring rows
           unsigned currentRoutingY = currentRoutingYs[source->getRow()-1];
 
           lines.resize(3);
@@ -425,7 +463,31 @@ void Region::appendItems(QGraphicsItem *parent) {
     }
   }
 
+  this->width += LINE_CLEARANCE;
+
   this->height = y - maxHeight + LINE_CLEARANCE;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+void Input::appendItems(QGraphicsItem *parent) {
+  QPolygonF polygon;
+  polygon << QPointF(0,0)
+          << QPointF(-INPUTOUTPUT_SIZE/2,INPUTOUTPUT_SIZE)
+          << QPointF(INPUTOUTPUT_SIZE/2,INPUTOUTPUT_SIZE);
+  baseItem = new QGraphicsPolygonItem(polygon, parent);
+  baseItem->setData(0, QVariant::fromValue((void*)this));
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+void Output::appendItems(QGraphicsItem *parent) {
+  QPolygonF polygon;
+  polygon << QPointF(0,0)
+          << QPointF(-INPUTOUTPUT_SIZE/2,-INPUTOUTPUT_SIZE)
+          << QPointF(INPUTOUTPUT_SIZE/2,-INPUTOUTPUT_SIZE);
+  baseItem = new QGraphicsPolygonItem(polygon, parent);
+  baseItem->setData(0, QVariant::fromValue((void*)this));
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -451,4 +513,3 @@ void Result::appendItems(QGraphicsItem *parent) {
   baseItem = new QGraphicsPolygonItem(polygon, parent);
   baseItem->setData(0, QVariant::fromValue((void*)this));
 }
-

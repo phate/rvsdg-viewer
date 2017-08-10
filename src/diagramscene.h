@@ -1,3 +1,11 @@
+/******************************************************************************
+ *
+ * QGraphicsScene subclass, used for displaying the RVSDG graph
+ *
+ * Asbjørn Djupdal 2017
+ *
+ *****************************************************************************/
+
 #ifndef DIAGRAMSCENE_H
 #define DIAGRAMSCENE_H
 
