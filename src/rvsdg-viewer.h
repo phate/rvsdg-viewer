@@ -29,18 +29,17 @@
 ///////////////////////////////////////////////////////////////////////////////
 // layout defines
 
-#define INPUTOUTPUT_SIZE 10
-#define INPUTOUTPUT_CLEARANCE 10
-#define TEXT_CLEARANCE 10
-#define NODE_HEIGHT 100
-#define LINE_CLEARANCE 10
-#define REGION_CLEARANCE 10
+#define INPUTOUTPUT_SIZE       10
+#define INPUTOUTPUT_CLEARANCE  10
+#define TEXT_CLEARANCE         10
+#define LINE_CLEARANCE         10
+#define REGION_CLEARANCE       10
 
 #define NODE_COLOR        Qt::gray
 #define GAMMA_NODE_COLOR  Qt::green
 #define LAMBDA_NODE_COLOR Qt::blue
 #define THETA_NODE_COLOR  Qt::red
-#define PHI_NODE_COLOR    255,165,0
+#define PHI_NODE_COLOR    QColor(255,165,0)
 
 #define EDGE_COLORS { \
   Qt::red, \
@@ -48,7 +47,7 @@
   Qt::blue, \
   Qt::yellow, \
   Qt::cyan \
-};
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // gui defines

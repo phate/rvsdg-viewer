@@ -10,7 +10,7 @@
 #define DIAGRAMSCENE_H
 
 #include <QGraphicsScene>
-#include "rvsdg.h"
+#include "node.h"
 
 class DiagramScene : public QGraphicsScene {
   Q_OBJECT

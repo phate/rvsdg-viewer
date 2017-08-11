@@ -14,7 +14,7 @@
 #include <QMainWindow>
 
 #include "diagramscene.h"
-#include "rvsdg.h"
+#include "element.h"
 #include "model.h"
 
 class MainWindow : public QMainWindow {

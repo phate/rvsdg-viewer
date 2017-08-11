@@ -1,11 +1,10 @@
 #include "diagramscene.h"
-#include "rvsdg.h"
 
 #include <QTextCursor>
 #include <QGraphicsSceneMouseEvent>
 #include <QGraphicsEllipseItem>
 
-QColor edgeColors[] = EDGE_COLORS
+QColor edgeColors[] = EDGE_COLORS;
 
 DiagramScene::DiagramScene(QObject *parent) : QGraphicsScene(parent) {
   zvalue = 0;

@@ -1,8 +1,8 @@
 QT += widgets xml
 QMAKE_CXXFLAGS += -g -std=gnu++11
 
-HEADERS       = src/mainwindow.h src/diagramscene.h src/rvsdg.h src/diagramview.h src/model.h src/rvsdg-viewer.h
-SOURCES       = src/rvsdg-viewer.cpp src/mainwindow.cpp src/diagramscene.cpp src/rvsdg.cpp src/model.cpp
+HEADERS       = src/mainwindow.h src/diagramscene.h src/diagramview.h src/model.h src/rvsdg-viewer.h src/element.h src/node.h src/region.h src/input.h src/output.h src/argument.h src/result.h
+SOURCES       = src/rvsdg-viewer.cpp src/mainwindow.cpp src/diagramscene.cpp src/model.cpp src/element.cpp src/node.cpp src/region.cpp
 RESOURCES     = application.qrc
 
 # install

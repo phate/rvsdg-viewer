@@ -17,7 +17,7 @@
 #include <QModelIndex>
 #include <QGraphicsPolygonItem>
 
-#include "rvsdg.h"
+#include "element.h"
 
 class Model : public QAbstractItemModel {
   Q_OBJECT
