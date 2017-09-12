@@ -20,6 +20,17 @@ class DiagramView : public QGraphicsView {
 
   Q_OBJECT
 
+protected:
+  void wheelEvent(QWheelEvent *event) {
+    if(event->modifiers() & Qt::ControlModifier) {
+      if(event->delta() > 0) zoomInEvent();
+      else zoomOutEvent();
+      centerOn(mapToScene(event->pos()));
+    } else {
+      QGraphicsView::wheelEvent(event);
+    }
+  }
+
 public:
   DiagramView(QGraphicsScene *scene) : QGraphicsView(scene) {
   }
