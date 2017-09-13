@@ -64,11 +64,11 @@ void MainWindow::init() {
   connect(openAct, SIGNAL(triggered()), this, SLOT(open()));
 
   zoomInAct = new QAction(QIcon(":/images/zoomin.png"), tr("&ZoomIn..."), this);
-  zoomInAct->setStatusTip(tr("ZoomIn"));
+  zoomInAct->setStatusTip(tr("Zoom in"));
   connect(zoomInAct, SIGNAL(triggered()), graphicsView, SLOT(zoomInEvent()));
 
   zoomOutAct = new QAction(QIcon(":/images/zoomout.png"), tr("&ZoomOut..."), this);
-  zoomOutAct->setStatusTip(tr("ZoomIn"));
+  zoomOutAct->setStatusTip(tr("Zoom out"));
   connect(zoomOutAct, SIGNAL(triggered()), graphicsView, SLOT(zoomOutEvent()));
 
   exitAct = new QAction(tr("E&xit"), this);
