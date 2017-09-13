@@ -22,8 +22,6 @@ class DiagramView : public QGraphicsView {
   Q_OBJECT
 
 protected:
-  unsigned originX, originY;
-
   void wheelEvent(QWheelEvent *event) {
     if(event->modifiers() & Qt::ControlModifier) {
       if(event->delta() > 0) zoomInEvent();
@@ -34,32 +32,10 @@ protected:
       QGraphicsView::wheelEvent(event);
     }
   }
-  void mousePressEvent(QMouseEvent* event) {
-    if(event->button() & Qt::LeftButton) {
-      originX = event->x();
-      originY = event->y();
-      setCursor(Qt::ClosedHandCursor);
-    }
-    event->accept();
-  }
-  void mouseReleaseEvent(QMouseEvent* event) {
-    if(event->button() & Qt::LeftButton) {
-      setCursor(Qt::ArrowCursor);
-    }
-    event->accept();
-  }
-  void mouseMoveEvent(QMouseEvent *event) {
-    if(event->buttons() & Qt::LeftButton) {
-      horizontalScrollBar()->setValue(horizontalScrollBar()->value() - (event->x() - originX));
-      verticalScrollBar()->setValue(verticalScrollBar()->value() - (event->y() - originY));
-      originX = event->x();
-      originY = event->y();
-    }
-    event->accept();
-  }
 
 public:
   DiagramView(QGraphicsScene *scene) : QGraphicsView(scene) {
+    setDragMode(QGraphicsView::ScrollHandDrag);
   }
 
 public slots:
