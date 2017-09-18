@@ -26,7 +26,6 @@ protected:
     if(event->modifiers() & Qt::ControlModifier) {
       if(event->delta() > 0) zoomInEvent();
       else zoomOutEvent();
-      centerOn(mapToScene(event->pos()));
       event->accept();
     } else {
       QGraphicsView::wheelEvent(event);

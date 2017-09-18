@@ -2,12 +2,22 @@
 
 ## Build
 
-1. mkdir build
-1. cd build
-1. qmake ../rvsdg-viewer.pro
+1. qmake
 1. make
 
 ## Run
 
 * $ rvsdg-viewer [xml-file]
 
+## Feature Requests and Bugs
+
+### High priority
+
+* Drop-down menu with edge colors instead of cycling
+* Keep colors when expanding nodes
+
+### Low priority
+
+* Don't show "drag hand" when not dragging
+* CTRL + [+|-] keys for zooming
+* Make height of sub-regions the same
