@@ -20,4 +20,3 @@
 * Don't show "drag hand" when not dragging
 * CTRL + [+|-] keys for zooming
 * Make height of sub-regions the same
-* Show filename in window title
