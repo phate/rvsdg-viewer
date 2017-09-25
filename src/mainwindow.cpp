@@ -125,6 +125,9 @@ MainWindow::~MainWindow() {
 }
 
 void MainWindow::loadFile(const QString &fileName) {
+  QFileInfo fi(fileName);
+  setWindowTitle("RVSDG Viewer - " + fi.fileName());
+
   QDomDocument doc;
   QFile file(fileName);
   if(!file.open(QIODevice::ReadOnly)) {
