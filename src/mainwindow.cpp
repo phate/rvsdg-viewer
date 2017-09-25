@@ -6,6 +6,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 QColor edgeColors[] = EDGE_COLORS;
+QString colorNames[] = COLOR_NAMES;
 
 MainWindow::MainWindow() {
   init();
@@ -47,9 +48,8 @@ void MainWindow::init() {
   connect(treeView, SIGNAL(clicked(QModelIndex)), this, SLOT(regionClicked(QModelIndex)));
 
   colorBox = new QComboBox();
-  colorBox->addItem("Black");
   for(unsigned i = 0; i < sizeof(edgeColors)/sizeof(edgeColors[0]); i++) {
-    colorBox->addItem(edgeColors[i].name());
+    colorBox->addItem(colorNames[i]);
   }
 
   scene = new DiagramScene(colorBox, this);
