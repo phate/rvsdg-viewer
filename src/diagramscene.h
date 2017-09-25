@@ -9,18 +9,19 @@
 #ifndef DIAGRAMSCENE_H
 #define DIAGRAMSCENE_H
 
+#include <QtWidgets>
 #include <QGraphicsScene>
 #include "node.h"
 
 class DiagramScene : public QGraphicsScene {
   Q_OBJECT
 
-  unsigned colorCounter;
   unsigned zvalue;
   Element *lastElement;
+  QComboBox *colorBox;
 
 public:
-  explicit DiagramScene(QObject *parent = 0);
+  explicit DiagramScene(QComboBox *colorBox, QObject *parent = 0);
   ~DiagramScene() {}
   void drawElement(Element *element);
   void mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent);

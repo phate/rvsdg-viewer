@@ -5,6 +5,8 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
+QColor edgeColors[] = EDGE_COLORS;
+
 MainWindow::MainWindow() {
   init();
 }
@@ -44,7 +46,13 @@ void MainWindow::init() {
 
   connect(treeView, SIGNAL(clicked(QModelIndex)), this, SLOT(regionClicked(QModelIndex)));
 
-  scene = new DiagramScene(this);
+  colorBox = new QComboBox();
+  colorBox->addItem("Black");
+  for(unsigned i = 0; i < sizeof(edgeColors)/sizeof(edgeColors[0]); i++) {
+    colorBox->addItem(edgeColors[i].name());
+  }
+
+  scene = new DiagramScene(colorBox, this);
   scene->setSceneRect(QRectF(0, 0, 1024, 512));
 
   graphicsView = new DiagramView(scene);
@@ -70,6 +78,10 @@ void MainWindow::init() {
   zoomOutAct = new QAction(QIcon(":/images/zoomout.png"), tr("&ZoomOut..."), this);
   zoomOutAct->setStatusTip(tr("Zoom out"));
   connect(zoomOutAct, SIGNAL(triggered()), graphicsView, SLOT(zoomOutEvent()));
+
+  // clearColorsAct = new QAction(tr("&Clear..."), this);
+  // clearColorsAct->setStatusTip(tr("Clear edge colors"));
+  // connect(clearColorsAct, SIGNAL(triggered()), this, SLOT(clearColorsEvent()));
 
   exitAct = new QAction(tr("E&xit"), this);
   exitAct->setShortcuts(QKeySequence::Quit);
@@ -101,6 +113,8 @@ void MainWindow::init() {
   fileToolBar->addAction(openAct);
   fileToolBar->addAction(zoomInAct);
   fileToolBar->addAction(zoomOutAct);
+  fileToolBar->addWidget(colorBox);
+  //fileToolBar->addAction(clearColorsAct);
 
   // statusbar
   statusBar()->showMessage(tr("Ready"));
@@ -141,4 +155,8 @@ void MainWindow::loadFile(const QString &fileName) {
 
   treeView->setModel(rvsdgModel);
   treeView->setColumnWidth(0,250);
+}
+
+void MainWindow::clearColorsEvent() {
+  
 }

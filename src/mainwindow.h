@@ -31,6 +31,7 @@ protected:
 private slots:
   void open();
   void about();
+  void clearColorsEvent();
   void regionClicked(const QModelIndex &index);
 
 private:
@@ -40,6 +41,7 @@ private:
   QTreeView *treeView;
   DiagramScene *scene;
   QGraphicsView *graphicsView;
+  QComboBox *colorBox;
   Model *rvsdgModel;
   QSplitter *splitter;
   QMenu *fileMenu;
@@ -51,6 +53,7 @@ private:
   QAction *aboutQtAct;
   QAction *zoomInAct;
   QAction *zoomOutAct;
+  //QAction *clearColorsAct;
 };
 
 #endif
