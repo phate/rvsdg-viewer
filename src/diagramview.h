@@ -32,6 +32,17 @@ protected:
       QGraphicsView::wheelEvent(event);
     }
   }
+  void keyPressEvent(QKeyEvent *event) {
+    if(event->modifiers() & Qt::ControlModifier) {
+      if(event->key() == Qt::Key_Plus) {
+        zoomInEvent();
+      }
+      if(event->key() == Qt::Key_Minus) {
+        zoomOutEvent();
+      }
+    }
+    event->accept();
+  }
 
 public:
   DiagramView(QGraphicsScene *scene) : QGraphicsView(scene) {

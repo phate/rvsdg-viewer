@@ -15,5 +15,4 @@
 
 ### Low priority
 
-* CTRL + [+|-] keys for zooming
 * Make height of sub-regions the same
