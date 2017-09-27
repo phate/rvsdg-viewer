@@ -71,11 +71,11 @@ void MainWindow::init() {
   openAct->setStatusTip(tr("Open an existing file"));
   connect(openAct, SIGNAL(triggered()), this, SLOT(open()));
 
-  zoomInAct = new QAction(QIcon(":/images/zoomin.png"), tr("&ZoomIn..."), this);
+  zoomInAct = new QAction(QIcon(":/images/zoomin.png"), tr("Zoom in"), this);
   zoomInAct->setStatusTip(tr("Zoom in"));
   connect(zoomInAct, SIGNAL(triggered()), graphicsView, SLOT(zoomInEvent()));
 
-  zoomOutAct = new QAction(QIcon(":/images/zoomout.png"), tr("&ZoomOut..."), this);
+  zoomOutAct = new QAction(QIcon(":/images/zoomout.png"), tr("Zoom out"), this);
   zoomOutAct->setStatusTip(tr("Zoom out"));
   connect(zoomOutAct, SIGNAL(triggered()), graphicsView, SLOT(zoomOutEvent()));
 

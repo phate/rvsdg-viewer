@@ -14,6 +14,7 @@
 #include <QGraphicsEllipseItem>
 #include <QMouseEvent>
 #include <QScrollBar>
+#include <QApplication>
 
 #include "rvsdg-viewer.h"
 
@@ -35,6 +36,7 @@ protected:
 public:
   DiagramView(QGraphicsScene *scene) : QGraphicsView(scene) {
     setDragMode(QGraphicsView::ScrollHandDrag);
+    QApplication::setOverrideCursor(Qt::ArrowCursor);
   }
 
 public slots:
