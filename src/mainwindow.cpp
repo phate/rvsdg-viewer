@@ -24,8 +24,9 @@ void MainWindow::closeEvent(QCloseEvent *event) {
 }
 
 void MainWindow::open() {
-  QString fileName = QFileDialog::getOpenFileName(this);
+  QString fileName = QFileDialog::getOpenFileName(this, tr("Open File"), QString(), tr("XML files (*.xml)"));
   if(!fileName.isNull()) loadFile(fileName);
+  graphicsView->viewport()->setCursor(Qt::ArrowCursor);
 }
 
 void MainWindow::about() {
@@ -125,6 +126,8 @@ MainWindow::~MainWindow() {
 }
 
 void MainWindow::loadFile(const QString &fileName) {
+  scene->clear();
+
   QFileInfo fi(fileName);
   setWindowTitle("RVSDG Viewer - " + fi.fileName());
 

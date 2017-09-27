@@ -23,6 +23,10 @@ class DiagramView : public QGraphicsView {
   Q_OBJECT
 
 protected:
+  void mouseReleaseEvent(QMouseEvent *event) {
+    QGraphicsView::mouseReleaseEvent(event);
+    viewport()->setCursor(Qt::ArrowCursor);
+  }
   void wheelEvent(QWheelEvent *event) {
     if(event->modifiers() & Qt::ControlModifier) {
       if(event->delta() > 0) zoomInEvent();
@@ -47,7 +51,7 @@ protected:
 public:
   DiagramView(QGraphicsScene *scene) : QGraphicsView(scene) {
     setDragMode(QGraphicsView::ScrollHandDrag);
-    QApplication::setOverrideCursor(Qt::ArrowCursor);
+    viewport()->setCursor(Qt::ArrowCursor);
   }
 
 public slots:
