@@ -38,7 +38,7 @@ unsigned Node::getNumEdges() {
   return totalSize;
 }
 
-Element *Node::getEdge(unsigned n, Element **source) {
+Edge *Node::getEdge(unsigned n, Element **source) {
   for(auto it : outputs) {
     if(n < it->getNumEdges()) {
       if(source) *source = it;
@@ -49,7 +49,7 @@ Element *Node::getEdge(unsigned n, Element **source) {
   return NULL;
 }
 
-void Node::setLineSegments(unsigned n, std::vector<QGraphicsLineItem*>lines) {
+void Node::setLineSegments(unsigned n, std::vector<LineSegment*>lines) {
   for(auto it : outputs) {
     if(n < it->getNumEdges()) {
       it->setLineSegments(n, lines);
@@ -86,6 +86,8 @@ QString Node::getTypeName() {
 void Node::appendItems(QGraphicsItem *parent) {
   unsigned xx = 0;
   unsigned yy = 0;
+
+  lineSegments.clear();
 
   width = 0;
   height = 0;

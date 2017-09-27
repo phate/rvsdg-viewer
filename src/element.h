@@ -18,6 +18,9 @@
 #include <QGraphicsPolygonItem>
 
 #include "rvsdg-viewer.h"
+#include "linesegment.h"
+
+class Edge;
 
 class Element {
 
@@ -26,7 +29,7 @@ protected:
   unsigned column;
   unsigned x;
   unsigned y;
-  std::vector<QGraphicsLineItem*> lineSegments;
+  std::vector<LineSegment*> lineSegments;
 
   void init(QString id) {
     this->id = id;
@@ -40,7 +43,7 @@ public:
   Element *parent;
   unsigned treeviewRow;
   std::vector<Element*> children;
-  std::vector<Element*> edges;
+  std::vector<Edge*> edges;
 
   //---------------------------------------------------------------------------
   // constructors and destructor
@@ -66,12 +69,12 @@ public:
     return this;
   }
 
-  void appendEdge(Element *e) {
-    edges.insert(edges.end(), e);
+  void appendEdge(Edge *e) {
+    edges.push_back(e);
   }
 
   void appendChild(Element *e) {
-    children.insert(children.end(), e);
+    children.push_back(e);
   }
 
   //---------------------------------------------------------------------------
@@ -85,16 +88,16 @@ public:
     return edges.size();
   }
 
-  virtual Element *getEdge(unsigned n) {
+  virtual Edge *getEdge(unsigned n) {
     return edges[n];
   }
 
-  virtual Element *getEdge(unsigned n, Element **source) {
+  virtual Edge *getEdge(unsigned n, Element **source) {
     *source = this;
     return edges[n];
   }
 
-  virtual void setLineSegments(unsigned n, std::vector<QGraphicsLineItem*>lines) {
+  virtual void setLineSegments(unsigned n, std::vector<LineSegment*>lines) {
     Q_UNUSED(n);
     lineSegments.insert(lineSegments.end(), lines.begin(), lines.end());
   }
@@ -103,7 +106,7 @@ public:
     lineSegments.clear();
   }
 
-  virtual std::vector<QGraphicsLineItem*> getLineSegments() {
+  virtual std::vector<LineSegment*> getLineSegments() {
     return lineSegments;
   }
 
@@ -151,6 +154,14 @@ public:
   /* appends QGraphicsItems representing this element to the given parent */
   virtual void appendItems(QGraphicsItem *parent) {
     Q_UNUSED(parent);
+  }
+  virtual void clearColors() {
+    for(auto edge : edges) {
+      edge->color = -1;
+    }
+    for(auto child : children) {
+      child->clearColors();
+    }
   }
 };
 

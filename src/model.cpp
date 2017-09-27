@@ -1,4 +1,5 @@
 #include "model.h"
+#include "edge.h"
 
 QModelIndex Model::index(int treeviewRow, int column, const QModelIndex &parent) const {
   if (!hasIndex(treeviewRow, column, parent))
@@ -114,7 +115,11 @@ Model::Model(const QDomDocument &doc, QObject *parent) : QAbstractItemModel(pare
         delete top;
         throw std::exception();
       }
-      sourceEl->appendEdge(targetEl);
+      sourceEl->appendEdge(new Edge(targetEl));
     }
   }
+}
+
+void Model::clearColors() {
+  top->clearColors();
 }

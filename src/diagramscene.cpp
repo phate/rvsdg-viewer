@@ -33,15 +33,20 @@ void DiagramScene::mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent) {
     QGraphicsItem *item = itemAt(mouseEvent->scenePos(), QTransform());
     Element *el = (Element*)item->data(0).value<void*>();
     if(el) {
-      std::vector<QGraphicsLineItem*> lines = el->getLineSegments();
+      std::vector<LineSegment*> lines = el->getLineSegments();
       for(auto line : lines) {
         if(line) {
+          QPen pen = line->item->pen();
+
           if(mouseEvent->button() == Qt::LeftButton) {
-            line->setPen(QPen(edgeColors[colorBox->currentIndex()]));
+            line->edge->color = colorBox->currentIndex();
+            pen.setColor(edgeColors[line->edge->color]);
           } else {
-            line->setPen(QPen(Qt::black));
+            pen.setColor(Qt::black);
+            line->edge->color = -1;
           }
-          line->setZValue(zvalue++);
+          line->item->setPen(pen);
+          line->item->setZValue(zvalue++);
         }
       }
     }

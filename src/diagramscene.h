@@ -24,6 +24,11 @@ public:
   explicit DiagramScene(QComboBox *colorBox, QObject *parent = 0);
   ~DiagramScene() {}
   void drawElement(Element *element);
+  void redraw() {
+    if(lastElement) {
+      drawElement(lastElement);
+    }
+  }
   void mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent);
   void mouseDoubleClickEvent(QGraphicsSceneMouseEvent *mouseEvent);
 };

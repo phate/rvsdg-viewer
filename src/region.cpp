@@ -1,10 +1,14 @@
 #include <stdio.h>
 #include <QDebug>
+#include <QPen>
 
 #include "element.h"
 #include "region.h"
 #include "argument.h"
 #include "result.h"
+#include "edge.h"
+
+extern QColor edgeColors[];
 
 Element *Region::parseXmlElement(QString tagName, QString childId) {
   Element *child = this;
@@ -78,7 +82,7 @@ void Region::layer() {
         bool nodeIsEligible = true;
         // look through all outgoing edges of this node
         for(unsigned i = 0; i < (*node)->getNumEdges(); i++) {
-          auto successor = (*node)->getEdge(i)->getVertex();
+          auto successor = (*node)->getEdge(i)->target->getVertex();
           if(std::find(nodesBelowCurrent.begin(), nodesBelowCurrent.end(), successor) == nodesBelowCurrent.end()) {
             // outgoing edge is not going to a layer below this one, can't choose this node
             nodeIsEligible = false;
@@ -137,6 +141,8 @@ Region::~Region() {
 
 void Region::appendItems(QGraphicsItem *parent) {
 
+  lineSegments.clear();
+
   //-----------------------------------------------------------------------------
   // build layers for this region
 
@@ -187,8 +193,8 @@ void Region::appendItems(QGraphicsItem *parent) {
     for(auto vertex : *layer) {
       for(unsigned i = 0; i < vertex->getNumEdges(); i++) {
         unsigned sourceRow = vertex->getRow();
-        unsigned targetRow = vertex->getEdge(i)->getRow();
-        unsigned targetColumn = vertex->getEdge(i)->getColumn();
+        unsigned targetRow = vertex->getEdge(i)->target->getRow();
+        unsigned targetColumn = vertex->getEdge(i)->target->getColumn();
 
         rowSpacing[sourceRow] += LINE_CLEARANCE;
 
@@ -257,13 +263,12 @@ void Region::appendItems(QGraphicsItem *parent) {
 
   for(auto layer : layers) {
     for(auto vertex : *layer) {
-      vertex->clearLineSegments();
-
       for(unsigned i = 0; i < vertex->getNumEdges(); i++) {
         Element *source = NULL;
-        Element *target = vertex->getEdge(i, &source);
+        Edge *edge = vertex->getEdge(i, &source);
+        Element *target = edge->target;
 
-        std::vector<QGraphicsLineItem*> lines(0);
+        std::vector<LineSegment*> lines(0);
 
         if((source->getRow() - target->getRow()) > 1) {
           // edge is spanning more than one row
@@ -273,11 +278,11 @@ void Region::appendItems(QGraphicsItem *parent) {
 
           lines.resize(5);
 
-          lines.push_back(new QGraphicsLineItem(source->getX(), source->getY(), source->getX(), currentRoutingYSource, parent));
-          lines.push_back(new QGraphicsLineItem(source->getX(), currentRoutingYSource, currentRoutingX, currentRoutingYSource, parent));
-          lines.push_back(new QGraphicsLineItem(currentRoutingX, currentRoutingYSource, currentRoutingX, currentRoutingYTarget, parent));
-          lines.push_back(new QGraphicsLineItem(currentRoutingX, currentRoutingYTarget, target->getX(), currentRoutingYTarget, parent));
-          lines.push_back(new QGraphicsLineItem(target->getX(), currentRoutingYTarget, target->getX(), target->getY(), parent));
+          lines.push_back(new LineSegment(edge, new QGraphicsLineItem(source->getX(), source->getY(), source->getX(), currentRoutingYSource, parent)));
+          lines.push_back(new LineSegment(edge, new QGraphicsLineItem(source->getX(), currentRoutingYSource, currentRoutingX, currentRoutingYSource, parent)));
+          lines.push_back(new LineSegment(edge, new QGraphicsLineItem(currentRoutingX, currentRoutingYSource, currentRoutingX, currentRoutingYTarget, parent)));
+          lines.push_back(new LineSegment(edge, new QGraphicsLineItem(currentRoutingX, currentRoutingYTarget, target->getX(), currentRoutingYTarget, parent)));
+          lines.push_back(new LineSegment(edge, new QGraphicsLineItem(target->getX(), currentRoutingYTarget, target->getX(), target->getY(), parent)));
       
           currentRoutingXs[target->getColumn()] -= LINE_CLEARANCE;
           currentRoutingYs[source->getRow()-1] -= LINE_CLEARANCE;
@@ -289,14 +294,25 @@ void Region::appendItems(QGraphicsItem *parent) {
 
           lines.resize(3);
 
-          lines.push_back(new QGraphicsLineItem(source->getX(), source->getY(), source->getX(), currentRoutingY, parent));
-          lines.push_back(new QGraphicsLineItem(source->getX(), currentRoutingY, target->getX(), currentRoutingY, parent));
-          lines.push_back(new QGraphicsLineItem(target->getX(), currentRoutingY, target->getX(), target->getY(), parent));
+          lines.push_back(new LineSegment(edge, new QGraphicsLineItem(source->getX(), source->getY(), source->getX(), currentRoutingY, parent)));
+          lines.push_back(new LineSegment(edge, new QGraphicsLineItem(source->getX(), currentRoutingY, target->getX(), currentRoutingY, parent)));
+          lines.push_back(new LineSegment(edge, new QGraphicsLineItem(target->getX(), currentRoutingY, target->getX(), target->getY(), parent)));
       
           currentRoutingYs[source->getRow()-1] -= LINE_CLEARANCE;
         }
 
-        target->clearLineSegments();
+        for(auto line : lines) {
+          if(line) {
+            QPen pen = line->item->pen();
+            if(edge->color == -1) {
+              pen.setColor(Qt::black);
+            } else {
+              pen.setColor(edgeColors[line->edge->color]);
+            }
+            line->item->setPen(pen);
+          }
+        }
+
         target->setLineSegments(i, lines);
         vertex->setLineSegments(i, lines);
       }

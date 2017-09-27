@@ -58,13 +58,13 @@ public:
 
   unsigned getNumEdges();
 
-  Element *getEdge(unsigned n) {
+  Edge *getEdge(unsigned n) {
     return getEdge(n, NULL);
   }
 
-  Element *getEdge(unsigned n, Element **source);
+  Edge *getEdge(unsigned n, Element **source);
 
-  void setLineSegments(unsigned n, std::vector<QGraphicsLineItem*>lines);
+  void setLineSegments(unsigned n, std::vector<LineSegment*>lines);
 
   void clearLineSegments();
 
@@ -99,6 +99,16 @@ public:
   }
 
   void appendItems(QGraphicsItem *item);
+
+  virtual void clearColors() {
+    Element::clearColors();
+    for(auto child : inputs) {
+      child->clearColors();
+    }
+    for(auto child : outputs) {
+      child->clearColors();
+    }
+  }
 };
 
 #endif

@@ -42,6 +42,15 @@ public:
     return height;
   }
   void appendItems(QGraphicsItem *item);
+  virtual void clearColors() {
+    Element::clearColors();
+    for(auto child : arguments) {
+      child->clearColors();
+    }
+    for(auto child : results) {
+      child->clearColors();
+    }
+  }
 };
 
 #endif

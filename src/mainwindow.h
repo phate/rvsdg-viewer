@@ -53,7 +53,7 @@ private:
   QAction *aboutQtAct;
   QAction *zoomInAct;
   QAction *zoomOutAct;
-  //QAction *clearColorsAct;
+  QAction *clearColorsAct;
 };
 
 #endif

@@ -79,9 +79,9 @@ void MainWindow::init() {
   zoomOutAct->setStatusTip(tr("Zoom out"));
   connect(zoomOutAct, SIGNAL(triggered()), graphicsView, SLOT(zoomOutEvent()));
 
-  // clearColorsAct = new QAction(tr("&Clear..."), this);
-  // clearColorsAct->setStatusTip(tr("Clear edge colors"));
-  // connect(clearColorsAct, SIGNAL(triggered()), this, SLOT(clearColorsEvent()));
+  clearColorsAct = new QAction(tr("&Clear..."), this);
+  clearColorsAct->setStatusTip(tr("Clear edge colors"));
+  connect(clearColorsAct, SIGNAL(triggered()), this, SLOT(clearColorsEvent()));
 
   exitAct = new QAction(tr("E&xit"), this);
   exitAct->setShortcuts(QKeySequence::Quit);
@@ -114,7 +114,7 @@ void MainWindow::init() {
   fileToolBar->addAction(zoomInAct);
   fileToolBar->addAction(zoomOutAct);
   fileToolBar->addWidget(colorBox);
-  //fileToolBar->addAction(clearColorsAct);
+  fileToolBar->addAction(clearColorsAct);
 
   // statusbar
   statusBar()->showMessage(tr("Ready"));
@@ -161,5 +161,8 @@ void MainWindow::loadFile(const QString &fileName) {
 }
 
 void MainWindow::clearColorsEvent() {
-  
+  if(rvsdgModel) {
+    rvsdgModel->clearColors();
+    scene->redraw();
+  }
 }
