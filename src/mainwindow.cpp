@@ -24,7 +24,7 @@ void MainWindow::closeEvent(QCloseEvent *event) {
 }
 
 void MainWindow::open() {
-  QString fileName = QFileDialog::getOpenFileName(this, tr("Open File"), QString(), tr("XML files (*.xml)"));
+  QString fileName = QFileDialog::getOpenFileName(this, tr("Open File"), QString(), tr("RVSDG files (*.rvsdg)"));
   if(!fileName.isNull()) loadFile(fileName);
   graphicsView->viewport()->setCursor(Qt::ArrowCursor);
 }
