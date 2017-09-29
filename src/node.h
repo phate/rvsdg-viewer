@@ -64,9 +64,7 @@ public:
 
   Edge *getEdge(unsigned n, Element **source);
 
-  void setLineSegments(unsigned n, std::vector<LineSegment*>lines);
-
-  void clearLineSegments();
+  void setLineSegments(unsigned n, std::vector<LineSegment>lines);
 
   bool isSimpleNode() {
     if(children.size() == 0) return true;

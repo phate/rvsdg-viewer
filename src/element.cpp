@@ -11,6 +11,9 @@ Element::~Element() {
   for(auto it : children) {
     delete it;
   }
+  for(auto it : edges) {
+    delete it;
+  }
 }
 
 /* recursive function that constructs the graph from XML DOM elements */

@@ -8,13 +8,11 @@ extern QColor edgeColors[];
 
 DiagramScene::DiagramScene(QComboBox *colorBox, QObject *parent) : QGraphicsScene(parent) {
   this->colorBox = colorBox;
-  zvalue = 0;
+  zvalue = 1;
 }
 
 void DiagramScene::drawElement(Element *element) {
   lastElement = element;
-
-  zvalue = 0;
 
   clear();
 
@@ -33,21 +31,22 @@ void DiagramScene::mousePressEvent(QGraphicsSceneMouseEvent *mouseEvent) {
     QGraphicsItem *item = itemAt(mouseEvent->scenePos(), QTransform());
     Element *el = (Element*)item->data(0).value<void*>();
     if(el) {
-      std::vector<LineSegment*> lines = el->getLineSegments();
+      std::vector<LineSegment> lines = el->getLineSegments();
       for(auto line : lines) {
-        if(line) {
-          QPen pen = line->item->pen();
+        QPen pen = line.item->pen();
 
-          if(mouseEvent->button() == Qt::LeftButton) {
-            line->edge->color = colorBox->currentIndex();
-            pen.setColor(edgeColors[line->edge->color]);
-          } else {
-            pen.setColor(Qt::black);
-            line->edge->color = -1;
-          }
-          line->item->setPen(pen);
-          line->item->setZValue(zvalue++);
+        if(mouseEvent->button() == Qt::LeftButton) {
+          line.edge->color = colorBox->currentIndex();
+          line.edge->zvalue = zvalue++;
+          pen.setColor(edgeColors[line.edge->color]);
+        } else {
+          pen.setColor(Qt::black);
+          line.edge->color = -1;
+          line.edge->zvalue = 0;
         }
+
+        line.item->setPen(pen);
+        line.item->setZValue(line.edge->zvalue);
       }
     }
   }

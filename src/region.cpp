@@ -134,6 +134,9 @@ Region::~Region() {
   for(auto it : arguments) {
     delete it;
   }
+  for(auto it : results) {
+    delete it;
+  }
   for(auto layer : layers) {
     delete layer;
   }
@@ -141,7 +144,7 @@ Region::~Region() {
 
 void Region::appendItems(QGraphicsItem *parent) {
 
-  lineSegments.clear();
+  clearLineSegments();
 
   //-----------------------------------------------------------------------------
   // build layers for this region
@@ -268,7 +271,7 @@ void Region::appendItems(QGraphicsItem *parent) {
         Edge *edge = vertex->getEdge(i, &source);
         Element *target = edge->target;
 
-        std::vector<LineSegment*> lines(0);
+        std::vector<LineSegment> lines;
 
         if((source->getRow() - target->getRow()) > 1) {
           // edge is spanning more than one row
@@ -276,13 +279,11 @@ void Region::appendItems(QGraphicsItem *parent) {
           unsigned currentRoutingYSource = currentRoutingYs[source->getRow()-1];
           unsigned currentRoutingYTarget = currentRoutingYs[target->getRow()];
 
-          lines.resize(5);
-
-          lines.push_back(new LineSegment(edge, new QGraphicsLineItem(source->getX(), source->getY(), source->getX(), currentRoutingYSource, parent)));
-          lines.push_back(new LineSegment(edge, new QGraphicsLineItem(source->getX(), currentRoutingYSource, currentRoutingX, currentRoutingYSource, parent)));
-          lines.push_back(new LineSegment(edge, new QGraphicsLineItem(currentRoutingX, currentRoutingYSource, currentRoutingX, currentRoutingYTarget, parent)));
-          lines.push_back(new LineSegment(edge, new QGraphicsLineItem(currentRoutingX, currentRoutingYTarget, target->getX(), currentRoutingYTarget, parent)));
-          lines.push_back(new LineSegment(edge, new QGraphicsLineItem(target->getX(), currentRoutingYTarget, target->getX(), target->getY(), parent)));
+          lines.push_back(LineSegment(edge, new QGraphicsLineItem(source->getX(), source->getY(), source->getX(), currentRoutingYSource, parent)));
+          lines.push_back(LineSegment(edge, new QGraphicsLineItem(source->getX(), currentRoutingYSource, currentRoutingX, currentRoutingYSource, parent)));
+          lines.push_back(LineSegment(edge, new QGraphicsLineItem(currentRoutingX, currentRoutingYSource, currentRoutingX, currentRoutingYTarget, parent)));
+          lines.push_back(LineSegment(edge, new QGraphicsLineItem(currentRoutingX, currentRoutingYTarget, target->getX(), currentRoutingYTarget, parent)));
+          lines.push_back(LineSegment(edge, new QGraphicsLineItem(target->getX(), currentRoutingYTarget, target->getX(), target->getY(), parent)));
       
           currentRoutingXs[target->getColumn()] -= LINE_CLEARANCE;
           currentRoutingYs[source->getRow()-1] -= LINE_CLEARANCE;
@@ -292,25 +293,22 @@ void Region::appendItems(QGraphicsItem *parent) {
           // edge is between neighbouring rows
           unsigned currentRoutingY = currentRoutingYs[source->getRow()-1];
 
-          lines.resize(3);
-
-          lines.push_back(new LineSegment(edge, new QGraphicsLineItem(source->getX(), source->getY(), source->getX(), currentRoutingY, parent)));
-          lines.push_back(new LineSegment(edge, new QGraphicsLineItem(source->getX(), currentRoutingY, target->getX(), currentRoutingY, parent)));
-          lines.push_back(new LineSegment(edge, new QGraphicsLineItem(target->getX(), currentRoutingY, target->getX(), target->getY(), parent)));
+          lines.push_back(LineSegment(edge, new QGraphicsLineItem(source->getX(), source->getY(), source->getX(), currentRoutingY, parent)));
+          lines.push_back(LineSegment(edge, new QGraphicsLineItem(source->getX(), currentRoutingY, target->getX(), currentRoutingY, parent)));
+          lines.push_back(LineSegment(edge, new QGraphicsLineItem(target->getX(), currentRoutingY, target->getX(), target->getY(), parent)));
       
           currentRoutingYs[source->getRow()-1] -= LINE_CLEARANCE;
         }
 
         for(auto line : lines) {
-          if(line) {
-            QPen pen = line->item->pen();
-            if(edge->color == -1) {
-              pen.setColor(Qt::black);
-            } else {
-              pen.setColor(edgeColors[line->edge->color]);
-            }
-            line->item->setPen(pen);
+          QPen pen = line.item->pen();
+          if(edge->color == -1) {
+            pen.setColor(Qt::black);
+          } else {
+            pen.setColor(edgeColors[line.edge->color]);
           }
+          line.item->setPen(pen);
+          line.item->setZValue(line.edge->zvalue);
         }
 
         target->setLineSegments(i, lines);

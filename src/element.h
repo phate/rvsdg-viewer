@@ -29,7 +29,7 @@ protected:
   unsigned column;
   unsigned x;
   unsigned y;
-  std::vector<LineSegment*> lineSegments;
+  std::vector<LineSegment> lineSegments;
 
   void init(QString id) {
     this->id = id;
@@ -97,16 +97,12 @@ public:
     return edges[n];
   }
 
-  virtual void setLineSegments(unsigned n, std::vector<LineSegment*>lines) {
+  virtual void setLineSegments(unsigned n, std::vector<LineSegment>lines) {
     Q_UNUSED(n);
     lineSegments.insert(lineSegments.end(), lines.begin(), lines.end());
   }
 
-  virtual void clearLineSegments() {
-    lineSegments.clear();
-  }
-
-  virtual std::vector<LineSegment*> getLineSegments() {
+  virtual std::vector<LineSegment> getLineSegments() {
     return lineSegments;
   }
 
@@ -154,6 +150,9 @@ public:
   /* appends QGraphicsItems representing this element to the given parent */
   virtual void appendItems(QGraphicsItem *parent) {
     Q_UNUSED(parent);
+  }
+  virtual void clearLineSegments() {
+    lineSegments.clear();
   }
   virtual void clearColors() {
     for(auto edge : edges) {

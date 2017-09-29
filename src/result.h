@@ -23,6 +23,8 @@ public:
     return INPUTOUTPUT_SIZE;
   }
   void appendItems(QGraphicsItem *parent) {
+    clearLineSegments();
+
     QPolygonF polygon;
     polygon << QPointF(0,0)
             << QPointF(-INPUTOUTPUT_SIZE/2,INPUTOUTPUT_SIZE)

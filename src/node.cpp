@@ -49,21 +49,12 @@ Edge *Node::getEdge(unsigned n, Element **source) {
   return NULL;
 }
 
-void Node::setLineSegments(unsigned n, std::vector<LineSegment*>lines) {
+void Node::setLineSegments(unsigned n, std::vector<LineSegment>lines) {
   for(auto it : outputs) {
     if(n < it->getNumEdges()) {
       it->setLineSegments(n, lines);
     }
     n -= it->getNumEdges();
-  }
-}
-
-void Node::clearLineSegments() {
-  for(auto it : outputs) {
-    it->clearLineSegments();
-  }
-  for(auto it : inputs) {
-    it->clearLineSegments();
   }
 }
 
@@ -87,7 +78,7 @@ void Node::appendItems(QGraphicsItem *parent) {
   unsigned xx = 0;
   unsigned yy = 0;
 
-  lineSegments.clear();
+  clearLineSegments();
 
   width = 0;
   height = 0;

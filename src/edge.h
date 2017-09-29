@@ -9,6 +9,7 @@ class Edge {
 public:
   int color;
   Element *target;
+  unsigned zvalue;
 
   Edge(Element *target) {
     this->target = target;
